@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\OneDriveCrawler.Core\Crawling.OneDriveCrawler.Core.csproj" />
+    <ProjectReference Include="..\..\..\src\OneDriveCrawler.Crawling\Crawling.OneDriveCrawler.csproj" />
+    <ProjectReference Include="..\..\..\src\OneDriveCrawler.Infrastructure\Crawling.OneDriveCrawler.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

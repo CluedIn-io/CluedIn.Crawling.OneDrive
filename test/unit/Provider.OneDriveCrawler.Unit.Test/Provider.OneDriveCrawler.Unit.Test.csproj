@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\OneDriveCrawler.Provider\Provider.OneDriveCrawler.csproj" />
+  </ItemGroup>
+</Project>
