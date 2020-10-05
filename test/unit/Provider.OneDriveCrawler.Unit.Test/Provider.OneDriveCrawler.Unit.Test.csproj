@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <PackageReference Include="Microsoft.Graph" Version="3.15.0" />
+    <PackageReference Include="Microsoft.Graph.Core" Version="1.21.0" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\..\src\OneDriveCrawler.Provider\Provider.OneDriveCrawler.csproj" />
   </ItemGroup>
 </Project>

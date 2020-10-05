@@ -13,5 +13,7 @@
     <PackageReference Include="CluedIn.Core.Agent" />
     <PackageReference Include="CluedIn.Server.Common.WebApi" />
     <PackageReference Include="CluedIn.Agent" />
+    <PackageReference Include="Microsoft.Graph" Version="3.15.0" />
+    <PackageReference Include="Microsoft.Graph.Core" Version="1.21.0" />
   </ItemGroup>
 </Project>
