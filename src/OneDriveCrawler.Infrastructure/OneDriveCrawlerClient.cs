@@ -6,7 +6,6 @@ using CluedIn.Core.Providers;
 using CluedIn.Crawling.OneDriveCrawler.Core;
 using Newtonsoft.Json;
 using RestSharp;
-//using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
 using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
@@ -25,10 +24,9 @@ namespace CluedIn.Crawling.OneDriveCrawler.Infrastructure
     // This class should not contain crawling logic (i.e. in which order things are retrieved)
     public class OneDriveCrawlerClient
     {
-        private readonly ILogger log;
         private readonly GraphServiceClient client;
 
-        public OneDriveCrawlerClient(ILogger log, OneDriveCrawlerCrawlJobData onedrivecrawlerCrawlJobData) // TODO: pass on any extra dependencies
+        public OneDriveCrawlerClient(ILogger log, OneDriveCrawlerCrawlJobData onedrivecrawlerCrawlJobData) 
         {
             if (onedrivecrawlerCrawlJobData == null)
             {
@@ -36,9 +34,9 @@ namespace CluedIn.Crawling.OneDriveCrawler.Infrastructure
             }
 
 
-            this.log = log ?? throw new ArgumentNullException(nameof(log));
+            //this.log = log ?? throw new ArgumentNullException(nameof(log));
 
-            var config = LoadAppSettings(onedrivecrawlerCrawlJobData);
+            // this is required for the Msal Authentication since it takes the SecurePassword as a parameter
             SecureString pass = new NetworkCredential("", onedrivecrawlerCrawlJobData.Password).SecurePassword;
 
             client = GetAuthenticatedGraphClient(onedrivecrawlerCrawlJobData,
@@ -51,33 +49,44 @@ namespace CluedIn.Crawling.OneDriveCrawler.Infrastructure
             var request = client.Me.Drive.Root.Children.Request();
 
             var results = request.GetAsync().Result;
+            string driveId = null;
             foreach (var item in results)
             {
-                // checking if an item is of any other type taht we would consider
-                if (item.Folder == null && item.Photo == null && item == null)
+                // if not assigned, get the Drive ID
+                if(driveId == null)
                 {
-                    yield return item;
+                    driveId = item.ParentReference.DriveId;
                 }
+
+                // checking if an item is a folder to expand it and yield it's child items
+                if (item.Folder != null && item.Folder.ChildCount > 0)
+                {
+                    List<Microsoft.Graph.DriveItem> children = ExpandFolder(driveId, item.Id);
+                    foreach (var c in children)
+                        yield return c;
+                }
+
+                yield return item;
             }
         }
 
-        private static IConfigurationRoot LoadAppSettings(OneDriveCrawlerCrawlJobData data)
+        private List<Microsoft.Graph.DriveItem> ExpandFolder(string driveId, string folderId)
         {
-            try
+            List<Microsoft.Graph.DriveItem> items = new List<Microsoft.Graph.DriveItem>();
+            var children = client.Drives[driveId].Items[folderId].Children
+                        .Request()
+                        .GetAsync();
+
+            // if subfolder encountered, recursively expand and concat the list of items
+            foreach (var c in children.Result)
             {
-                var config = new ConfigurationBuilder().Build();
+                if(c.Folder != null)
+                    items.AddRange(ExpandFolder(driveId, c.Id));
 
-                //if (string.IsNullOrEmpty(config["applicationId"]) ||
-                //    string.IsNullOrEmpty(config["tenantId"]))
-
-                // config["applicationId"] = data.
-
-                return config;
+                items.Add(c);
             }
-            catch (System.IO.FileNotFoundException)
-            {
-                return null;
-            }
+
+            return items;
         }
 
         private static IAuthenticationProvider CreateAuthorizationProvider(OneDriveCrawlerCrawlJobData config, string userName, SecureString userPassword)
