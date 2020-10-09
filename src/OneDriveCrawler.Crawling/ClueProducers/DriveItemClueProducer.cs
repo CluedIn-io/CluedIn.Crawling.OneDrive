@@ -4,6 +4,7 @@ using CluedIn.Crawling.Factories;
 using CluedIn.Crawling.Helpers;
 using CluedIn.Crawling.OneDriveCrawler.Vocabularies;
 using CluedIn.Crawling.OneDriveCrawler.Core.Models;
+using Castle.Core.Internal;
 
 namespace CluedIn.Crawling.OneDriveCrawler.ClueProducers
 {
@@ -24,68 +25,19 @@ namespace CluedIn.Crawling.OneDriveCrawler.ClueProducers
 
             var data = clue.Data.EntityData;
 
+            string name = input.Id;
+            if(!input.WebUrl.IsNullOrEmpty())
+            {
+                name += "|" + input.WebUrl;
+            }
+            data.Name = name;
+
             if (input.CreatedBy != null)
             {
                 factory.CreateIncomingEntityReference(clue, EntityType.Person, EntityEdgeType.CreatedBy, input.CreatedBy, input.CreatedBy);
                 data.Properties[driveitemVocabulary.CreatedBy] = input.CreatedBy.PrintIfAvailable();
             }
 
-            // TODO: Uncomment or delete as appropriate for the different properties
-            // if(input.Name != null)
-            // {
-            //     data.Name = input.Name;
-            // }
-
-            // if(input.DisplayName != null)
-            // {
-            //     data.DisplayName = input.DisplayName;
-            // }
-
-            // if(input.Description != null)
-            // {
-            //     data.Description = input.Description;
-            // }
-
-
-
-            // TODO: Example of Updated, Modified date being parsed through DateTimeOffset.
-            // DateTimeOffset date;
-            // if (DateTimeOffset.TryParse(input.CreatedAt, out date) && input.CreatedAt != null){
-            //     data.CreatedDate = date;
-            // }
-
-
-            //TODO: Examples of edge creation
-            // if (input.MobilePhone != null)
-            // {
-            //     factory.CreateIncomingEntityReference(clue, EntityType.PhoneNumber, EntityEdgeType.Parent, input.MobilePhone, input.MobilePhone);
-            //     data.Properties[driveitemVocabulary.MobilePhone] = input.MobilePhone.PrintIfAvailable();
-            // }
-
-            // if (input.WorkPhone != null)
-            // {
-            //     factory.CreateIncomingEntityReference(clue, EntityType.PhoneNumber, EntityEdgeType.Parent, input.WorkPhone, input.WorkPhone);
-            //     data.Properties[driveitemVocabulary.WorkPhone] = input.WorkPhone.PrintIfAvailable();
-            // }
-
-
-            //TODO: Example of PersonReference
-            //  if (input.UpdatedBy != null)
-            // {
-            //     if (input.UpdatedByName != null)
-            //     {
-            //         var updatedPersonReference = new PersonReference(input.UpdatedByName, new EntityCode(EntityType.Person, OneDriveCrawlerConstants.CodeOrigin, input.UpdatedBy));
-            //         data.LastChangedBy = updatedPersonReference;
-            //     }
-            //     else
-            //     {
-            //         var updatedPersonReference = new PersonReference(new EntityCode(EntityType.Person, OneDriveCrawlerConstants.CodeOrigin, input.UpdatedBy));
-            //         data.LastChangedBy = updatedPersonReference;
-            //     }
-            // }
-
-            //TODO: Mapping data into general properties metadata bag.
-            //TODO: You should make sure as much data is mapped into specific metadata fields, rather than general .properties. bag.
             data.Properties[driveitemVocabulary.Audio] = input.Audio.PrintIfAvailable();
             data.Properties[driveitemVocabulary.Content] = input.Content.PrintIfAvailable();
             data.Properties[driveitemVocabulary.CreatedBy] = input.CreatedBy.PrintIfAvailable();

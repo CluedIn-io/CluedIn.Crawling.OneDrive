@@ -26,7 +26,7 @@ namespace CluedIn.Crawling.OneDriveCrawler.Infrastructure
     {
         private readonly GraphServiceClient client;
 
-        public OneDriveCrawlerClient(ILogger log, OneDriveCrawlerCrawlJobData onedrivecrawlerCrawlJobData) 
+        public OneDriveCrawlerClient(OneDriveCrawlerCrawlJobData onedrivecrawlerCrawlJobData) 
         {
             if (onedrivecrawlerCrawlJobData == null)
             {
