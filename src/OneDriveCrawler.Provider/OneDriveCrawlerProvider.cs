@@ -38,15 +38,17 @@ namespace CluedIn.Provider.OneDriveCrawler
                 throw new ArgumentNullException(nameof(configuration));
 
             var onedrivecrawlerCrawlJobData = new OneDriveCrawlerCrawlJobData();
-            if (configuration.ContainsKey(OneDriveCrawlerConstants.KeyName.ApiKey))
-            { onedrivecrawlerCrawlJobData.ApiKey = configuration[OneDriveCrawlerConstants.KeyName.ApiKey].ToString(); }
 
             // Tenant and app IDs are created when regiestering the application in Azure Active Directory
             // https://docs.microsoft.com/en-us/learn/modules/msgraph-access-file-data/3-exercise-access-files-onedrive
-            onedrivecrawlerCrawlJobData.UserName = configuration[OneDriveCrawlerConstants.KeyName.UserName].ToString();
-            onedrivecrawlerCrawlJobData.Password = configuration[OneDriveCrawlerConstants.KeyName.Password].ToString();
-            onedrivecrawlerCrawlJobData.TenantId = configuration[OneDriveCrawlerConstants.KeyName.TenantId].ToString();
-            onedrivecrawlerCrawlJobData.ApplicationId = configuration[OneDriveCrawlerConstants.KeyName.ApplicationId].ToString();
+            if (configuration.ContainsKey(OneDriveCrawlerConstants.KeyName.UserName))
+                onedrivecrawlerCrawlJobData.UserName = configuration[OneDriveCrawlerConstants.KeyName.UserName].ToString();
+            if (configuration.ContainsKey(OneDriveCrawlerConstants.KeyName.Password))
+                onedrivecrawlerCrawlJobData.Password = configuration[OneDriveCrawlerConstants.KeyName.Password].ToString();
+            if (configuration.ContainsKey(OneDriveCrawlerConstants.KeyName.TenantId))
+                onedrivecrawlerCrawlJobData.TenantId = configuration[OneDriveCrawlerConstants.KeyName.TenantId].ToString();
+            if (configuration.ContainsKey(OneDriveCrawlerConstants.KeyName.ApplicationId))
+                onedrivecrawlerCrawlJobData.ApplicationId = configuration[OneDriveCrawlerConstants.KeyName.ApplicationId].ToString();
 
             return await Task.FromResult(onedrivecrawlerCrawlJobData);
         }
@@ -82,7 +84,10 @@ namespace CluedIn.Provider.OneDriveCrawler
             {
                 //TODO add the transformations from specific CrawlJobData object to dictionary
                 // add tests to GetHelperConfigurationBehaviour.cs
-                dictionary.Add(OneDriveCrawlerConstants.KeyName.ApiKey, onedrivecrawlerCrawlJobData.ApiKey);
+                dictionary.Add(OneDriveCrawlerConstants.KeyName.UserName, onedrivecrawlerCrawlJobData.UserName);
+                dictionary.Add(OneDriveCrawlerConstants.KeyName.Password, onedrivecrawlerCrawlJobData.Password);
+                dictionary.Add(OneDriveCrawlerConstants.KeyName.TenantId, onedrivecrawlerCrawlJobData.TenantId);
+                dictionary.Add(OneDriveCrawlerConstants.KeyName.ApplicationId, onedrivecrawlerCrawlJobData.ApplicationId);
             }
 
             return await Task.FromResult(dictionary);

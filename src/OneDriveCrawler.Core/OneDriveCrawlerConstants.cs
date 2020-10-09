@@ -9,11 +9,11 @@ namespace CluedIn.Crawling.OneDriveCrawler.Core
     {
         public struct KeyName
         {
-            public const string ApiKey = nameof(ApiKey);
+            //public const string ApiKey = nameof(ApiKey);
             public const string UserName = nameof(UserName);
-            public const string Password = nameof(ApiKey);
-            public const string TenantId = nameof(ApiKey);
-            public const string ApplicationId = nameof(ApiKey);
+            public const string Password = nameof(Password);
+            public const string TenantId = nameof(TenantId);
+            public const string ApplicationId = nameof(ApplicationId);
         }
 
         // TODO Complete the following section

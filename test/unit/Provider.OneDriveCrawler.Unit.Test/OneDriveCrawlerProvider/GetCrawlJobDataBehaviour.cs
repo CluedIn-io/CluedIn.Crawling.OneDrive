@@ -28,7 +28,7 @@ namespace CluedIn.Provider.OneDriveCrawler.Unit.Test.OneDriveCrawlerProvider
         }
 
         [Theory]
-        [InlineAutoData(OneDriveCrawlerConstants.KeyName.ApiKey, nameof(OneDriveCrawlerCrawlJobData.ApiKey))]
+        [InlineAutoData(OneDriveCrawlerConstants.KeyName.UserName, nameof(OneDriveCrawlerCrawlJobData.UserName))]
         public async Task InitializesProperties(string key, string propertyName, string sampleValue, Guid organizationId, Guid userId, Guid providerDefinitionId)
         {
             var dictionary = new Dictionary<string, object>()

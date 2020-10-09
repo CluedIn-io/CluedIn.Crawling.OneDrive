@@ -9,7 +9,10 @@ namespace CluedIn.Crawling.OneDriveCrawler.Integration.Test
     {
       return new Dictionary<string, object>
             {
-                { OneDriveCrawlerConstants.KeyName.ApiKey, "demo" }
+                { OneDriveCrawlerConstants.KeyName.UserName, "mts@cluedin.kgb" },
+                { OneDriveCrawlerConstants.KeyName.Password, "pass" },
+                { OneDriveCrawlerConstants.KeyName.TenantId, "yes" },
+                { OneDriveCrawlerConstants.KeyName.ApplicationId, "ye" }
             };
     }
   }

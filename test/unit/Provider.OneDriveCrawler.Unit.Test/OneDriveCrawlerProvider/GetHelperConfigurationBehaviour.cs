@@ -42,7 +42,10 @@ namespace CluedIn.Provider.OneDriveCrawler.Unit.Test.OneDriveCrawlerProvider
 
 
         [Theory]
-        [InlineAutoData("ApiKey", "ApiKey", "some-value")]
+        [InlineAutoData("UserName", "UserName", "some-value")]
+        [InlineAutoData("Password", "Password", "some-value")]
+        [InlineAutoData("TenantId", "TenantId", "some-value")]
+        [InlineAutoData("ApplicationId", "ApplicationId", "some-value")]
         // TODO add data for other properties that need populating
         // Fill in the values for expected results ....
         public void Returns_Expected_Data(string key, string propertyName, object expectedValue, Guid organizationId, Guid userId, Guid providerDefinitionId) // TODO add additional parameters to populate CrawlJobData instance
