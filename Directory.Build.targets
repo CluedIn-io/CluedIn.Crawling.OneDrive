@@ -1,5 +1,11 @@
 <Project>
-    <!-- Ensure the targets for Central package management are imported -->
-    <Import Project="Sdk.targets" Sdk="Microsoft.Build.CentralPackageVersions"/>
+
+    <ItemGroup>
+
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-18618-05">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+
+    </ItemGroup>
 
 </Project>

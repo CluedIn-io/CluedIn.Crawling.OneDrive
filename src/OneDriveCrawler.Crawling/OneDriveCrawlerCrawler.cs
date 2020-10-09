@@ -23,8 +23,8 @@ namespace CluedIn.Crawling.OneDriveCrawler
 
             var client = clientFactory.CreateNew(onedrivecrawlercrawlJobData);
 
-            //retrieve data from provider and yield objects
-            Microsoft.Graph.OneDri
+            foreach (var item in client.GetDriveItems())
+                yield return item;
         }       
     }
 }

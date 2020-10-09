@@ -41,6 +41,13 @@ namespace CluedIn.Provider.OneDriveCrawler
             if (configuration.ContainsKey(OneDriveCrawlerConstants.KeyName.ApiKey))
             { onedrivecrawlerCrawlJobData.ApiKey = configuration[OneDriveCrawlerConstants.KeyName.ApiKey].ToString(); }
 
+            // Tenant and app IDs are created when regiestering the application in Azure Active Directory
+            // https://docs.microsoft.com/en-us/learn/modules/msgraph-access-file-data/3-exercise-access-files-onedrive
+            onedrivecrawlerCrawlJobData.UserName = configuration[OneDriveCrawlerConstants.KeyName.UserName].ToString();
+            onedrivecrawlerCrawlJobData.Password = configuration[OneDriveCrawlerConstants.KeyName.Password].ToString();
+            onedrivecrawlerCrawlJobData.TenantId = configuration[OneDriveCrawlerConstants.KeyName.TenantId].ToString();
+            onedrivecrawlerCrawlJobData.ApplicationId = configuration[OneDriveCrawlerConstants.KeyName.ApplicationId].ToString();
+
             return await Task.FromResult(onedrivecrawlerCrawlJobData);
         }
 

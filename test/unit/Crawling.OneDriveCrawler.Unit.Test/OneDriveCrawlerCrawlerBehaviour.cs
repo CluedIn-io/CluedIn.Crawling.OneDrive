@@ -3,7 +3,7 @@ using CluedIn.Crawling;
 using CluedIn.Crawling.OneDriveCrawler;
 using CluedIn.Crawling.OneDriveCrawler.Infrastructure.Factories;
 using Moq;
-using Shouldly;
+using Should;
 using Xunit;
 
 namespace Crawling.OneDriveCrawler.Unit.Test

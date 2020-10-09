@@ -3,7 +3,7 @@ using System.Linq;
 using AutoFixture.Xunit2;
 using CluedIn.Core.Crawling;
 using CluedIn.Crawling.OneDriveCrawler.Core;
-using Shouldly;
+using Should;
 using Xunit;
 
 namespace CluedIn.Provider.OneDriveCrawler.Unit.Test.OneDriveCrawlerProvider
@@ -26,7 +26,7 @@ namespace CluedIn.Provider.OneDriveCrawler.Unit.Test.OneDriveCrawlerProvider
 
             ((ArgumentNullException)ex.InnerExceptions.Single())
                 .ParamName
-                .ShouldBe("jobData");
+                .ShouldEqual("jobData");
         }
 
         [Theory]
@@ -59,7 +59,7 @@ namespace CluedIn.Provider.OneDriveCrawler.Unit.Test.OneDriveCrawlerProvider
                     $"{key} not found in results");
 
             result[key]
-                .ShouldBe(expectedValue);
+                .ShouldEqual(expectedValue);
         }
     }
 }

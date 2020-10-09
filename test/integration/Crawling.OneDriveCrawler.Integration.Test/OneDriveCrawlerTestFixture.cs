@@ -1,11 +1,9 @@
 using System.IO;
 using System.Reflection;
-using Castle.MicroKernel.Registration;
 using CluedIn.Crawling.OneDriveCrawler.Core;
 using CrawlerIntegrationTesting.Clues;
+using CrawlerIntegrationTesting.Log;
 using Xunit.Abstractions;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using DebugCrawlerHost = CrawlerIntegrationTesting.CrawlerHost.DebugCrawlerHost<CluedIn.Crawling.OneDriveCrawler.Core.OneDriveCrawlerCrawlJobData>;
 
 namespace CluedIn.Crawling.OneDriveCrawler.Integration.Test
@@ -15,19 +13,15 @@ namespace CluedIn.Crawling.OneDriveCrawler.Integration.Test
         public ClueStorage ClueStorage { get; }
         private readonly DebugCrawlerHost debugCrawlerHost;
 
-        public ILogger<OneDriveCrawlerTestFixture> Log { get; }
-
+        public TestLogger Log { get; }
         public OneDriveCrawlerTestFixture()
         {
             var executingFolder = new FileInfo(Assembly.GetExecutingAssembly().CodeBase.Substring(8)).DirectoryName;
-            debugCrawlerHost = new DebugCrawlerHost(executingFolder, OneDriveCrawlerConstants.ProviderName, c => {
-                c.Register(Component.For<ILogger>().UsingFactoryMethod(_ => NullLogger.Instance).LifestyleSingleton());
-                c.Register(Component.For<ILoggerFactory>().UsingFactoryMethod(_ => NullLoggerFactory.Instance).LifestyleSingleton());
-            });
+            debugCrawlerHost = new DebugCrawlerHost(executingFolder, OneDriveCrawlerConstants.ProviderName);
 
             ClueStorage = new ClueStorage();
 
-            Log = debugCrawlerHost.AppContext.Container.Resolve<ILogger<OneDriveCrawlerTestFixture>>();
+            Log = debugCrawlerHost.AppContext.Container.Resolve<TestLogger>();
 
             debugCrawlerHost.ProcessClue += ClueStorage.AddClue;
 
@@ -44,8 +38,7 @@ namespace CluedIn.Crawling.OneDriveCrawler.Integration.Test
 
         public void PrintLogs(ITestOutputHelper output)
         {
-            //TODO:
-            //output.WriteLine(Log.PrintLogs());
+            output.WriteLine(Log.PrintLogs());
         }
 
         public void Dispose()

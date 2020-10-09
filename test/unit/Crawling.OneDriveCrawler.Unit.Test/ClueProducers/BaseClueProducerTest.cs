@@ -1,11 +1,11 @@
 using System;
 using AutoFixture.Xunit2;
 using CluedIn.Core.Data;
+using CluedIn.Core.Logging;
 using CluedIn.Crawling;
 using CluedIn.Crawling.Factories;
-using Microsoft.Extensions.Logging;
 using Moq;
-using Shouldly;
+using Should;
 using Xunit;
 
 namespace Crawling.OneDriveCrawler.Unit.Test.ClueProducers

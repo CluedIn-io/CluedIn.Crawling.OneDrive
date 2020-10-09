@@ -1,11 +1,20 @@
 using System;
 using System.Net;
 using System.Threading.Tasks;
+using CluedIn.Core.Logging;
 using CluedIn.Core.Providers;
 using CluedIn.Crawling.OneDriveCrawler.Core;
 using Newtonsoft.Json;
 using RestSharp;
-using Microsoft.Extensions.Logging;
+//using Microsoft.Extensions.Logging;
+using Microsoft.Graph;
+using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
+using Microsoft.Identity.Client;
+using CluedIn.Crawling.OneDriveCrawler.Infrastructure.Helpers;
+using System.Security;
+using CluedIn.Crawling.OneDriveCrawler.Core.Models;
+
 
 namespace CluedIn.Crawling.OneDriveCrawler.Infrastructure
 {
@@ -16,48 +25,81 @@ namespace CluedIn.Crawling.OneDriveCrawler.Infrastructure
     // This class should not contain crawling logic (i.e. in which order things are retrieved)
     public class OneDriveCrawlerClient
     {
-        private const string BaseUri = "http://sample.com";
+        private readonly ILogger log;
+        private readonly GraphServiceClient client;
 
-        private readonly ILogger<OneDriveCrawlerClient> log;
-
-        private readonly IRestClient client;
-
-        public OneDriveCrawlerClient(ILogger<OneDriveCrawlerClient> log, OneDriveCrawlerCrawlJobData onedrivecrawlerCrawlJobData, IRestClient client) // TODO: pass on any extra dependencies
+        public OneDriveCrawlerClient(ILogger log, OneDriveCrawlerCrawlJobData onedrivecrawlerCrawlJobData) // TODO: pass on any extra dependencies
         {
             if (onedrivecrawlerCrawlJobData == null)
             {
                 throw new ArgumentNullException(nameof(onedrivecrawlerCrawlJobData));
             }
 
-            if (client == null)
-            {
-                throw new ArgumentNullException(nameof(client));
-            }
 
             this.log = log ?? throw new ArgumentNullException(nameof(log));
-            this.client = client ?? throw new ArgumentNullException(nameof(client));
 
-            // TODO use info from onedrivecrawlerCrawlJobData to instantiate the connection
-            client.BaseUrl = new Uri(BaseUri);
-            client.AddDefaultParameter("api_key", onedrivecrawlerCrawlJobData.ApiKey, ParameterType.QueryString);
+            var config = LoadAppSettings(onedrivecrawlerCrawlJobData);
+            SecureString pass = new NetworkCredential("", onedrivecrawlerCrawlJobData.Password).SecurePassword;
+
+            client = GetAuthenticatedGraphClient(onedrivecrawlerCrawlJobData,
+                onedrivecrawlerCrawlJobData.UserName,
+                pass);
         }
 
-        private async Task<T> GetAsync<T>(string url)
+        public IEnumerable<Microsoft.Graph.DriveItem> GetDriveItems()
         {
-            var request = new RestRequest(url, Method.GET);
+            var request = client.Me.Drive.Root.Children.Request();
 
-            var response = await client.ExecuteAsync(request, request.Method);
-
-            if (response.StatusCode != HttpStatusCode.OK)
+            var results = request.GetAsync().Result;
+            foreach (var item in results)
             {
-                var diagnosticMessage = $"Request to {client.BaseUrl}{url} failed, response {response.ErrorMessage} ({response.StatusCode})";
-                log.LogError(diagnosticMessage);
-                throw new InvalidOperationException($"Communication to jsonplaceholder unavailable. {diagnosticMessage}");
+                // checking if an item is of any other type taht we would consider
+                if (item.Folder == null && item.Photo == null && item == null)
+                {
+                    yield return item;
+                }
             }
+        }
 
-            var data = JsonConvert.DeserializeObject<T>(response.Content);
+        private static IConfigurationRoot LoadAppSettings(OneDriveCrawlerCrawlJobData data)
+        {
+            try
+            {
+                var config = new ConfigurationBuilder().Build();
 
-            return data;
+                //if (string.IsNullOrEmpty(config["applicationId"]) ||
+                //    string.IsNullOrEmpty(config["tenantId"]))
+
+                // config["applicationId"] = data.
+
+                return config;
+            }
+            catch (System.IO.FileNotFoundException)
+            {
+                return null;
+            }
+        }
+
+        private static IAuthenticationProvider CreateAuthorizationProvider(OneDriveCrawlerCrawlJobData config, string userName, SecureString userPassword)
+        {
+            var clientId = config.ApplicationId;
+            var authority = $"https://login.microsoftonline.com/{config.TenantId}/v2.0";
+
+            List<string> scopes = new List<string>();
+            scopes.Add("User.Read");
+            scopes.Add("Files.Read");
+
+            var cca = PublicClientApplicationBuilder.Create(clientId)
+                                                    .WithAuthority(authority)
+                                                    .Build();
+            return MsalAuthenticationProvider.GetInstance(cca, scopes.ToArray(), userName, userPassword);
+        }
+
+        private static GraphServiceClient GetAuthenticatedGraphClient(OneDriveCrawlerCrawlJobData config, string userName, SecureString userPassword)
+        {
+            var authenticationProvider = CreateAuthorizationProvider(config, userName, userPassword);
+            var graphClient = new GraphServiceClient(authenticationProvider);
+            return graphClient;
         }
 
         public AccountInformation GetAccountInformation()

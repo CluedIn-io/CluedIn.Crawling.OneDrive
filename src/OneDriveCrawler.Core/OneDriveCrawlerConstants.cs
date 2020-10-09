@@ -10,6 +10,10 @@ namespace CluedIn.Crawling.OneDriveCrawler.Core
         public struct KeyName
         {
             public const string ApiKey = nameof(ApiKey);
+            public const string UserName = nameof(UserName);
+            public const string Password = nameof(ApiKey);
+            public const string TenantId = nameof(ApiKey);
+            public const string ApplicationId = nameof(ApiKey);
         }
 
         // TODO Complete the following section
@@ -56,7 +60,7 @@ namespace CluedIn.Crawling.OneDriveCrawler.Core
         public const string ProviderRootCodeValue = "OneDriveCrawler";
         public const string CrawlerName = "OneDriveCrawlerCrawler";
         public const string CrawlerComponentName = "OneDriveCrawlerCrawler";
-        public static readonly Guid ProviderId = Guid.Parse("eab90b26-83d0-4aa0-8942-620cda2cf60f");
+        public static readonly Guid ProviderId = Guid.Parse("70ea18fa-68c0-4b31-b97e-0e33088f22c4");
         public const string ProviderName = "OneDriveCrawler";
 
         
@@ -69,7 +73,7 @@ namespace CluedIn.Crawling.OneDriveCrawler.Core
                                        { "Tracking",        "Expenses and Invoices against customers" },
                                        { "Intelligence",    "Aggregate types of invoices and expenses against customers and companies." }
                                    },
-            Icon = ProviderIconFactory.CreateConnectorUri(ProviderId),
+            Icon = ProviderIconFactory.CreateUri(ProviderId),
             ProviderName = ProviderName,
             ProviderId = ProviderId,
             Webhooks = SupportsWebHooks
