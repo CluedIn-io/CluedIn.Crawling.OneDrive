@@ -10,13 +10,13 @@ namespace CluedIn.Crawling.OneDriveCrawler.Vocabularies
             VocabularyName = "OneDriveCrawler DriveItem"; 
             KeyPrefix      = "onedrivecrawler.driveitem"; 
             KeySeparator   = ".";
-            Grouping       = EntityType.Files; 
+            Grouping       = "/DriveItem"; //EntityType.Files
 
             //TODO: Make sure that any properties mapped into CluedIn Vocabulary are not in the group.
             AddGroup("OneDriveCrawler DriveItem Details", group =>
             {
                 Audio = group.Add(new VocabularyKey("Audio", VocabularyKeyDataType.Boolean, VocabularyKeyVisibility.Visible));
-                Content = group.Add(new VocabularyKey("Content", VocabularyKeyDataType.Text, VocabularyKeyVisibility.Hidden));
+                //Content = group.Add(new VocabularyKey("Content", VocabularyKeyDataType.Text, VocabularyKeyVisibility.Hidden));
                 CreatedBy = group.Add(new VocabularyKey("CreatedBy", VocabularyKeyDataType.Text, VocabularyKeyVisibility.Visible));
                 CreatedDateTime = group.Add(new VocabularyKey("CreatedDateTime", VocabularyKeyDataType.DateTime, VocabularyKeyVisibility.Visible));
                 CTag = group.Add(new VocabularyKey("CTag", VocabularyKeyDataType.Text, VocabularyKeyVisibility.Hidden));
@@ -35,7 +35,7 @@ namespace CluedIn.Crawling.OneDriveCrawler.Vocabularies
                 Name = group.Add(new VocabularyKey("Name", VocabularyKeyDataType.Text, VocabularyKeyVisibility.Visible));
                 Package = group.Add(new VocabularyKey("Package", VocabularyKeyDataType.Boolean, VocabularyKeyVisibility.Visible));
                 ParentReference = group.Add(new VocabularyKey("ParentReference", VocabularyKeyDataType.Text, VocabularyKeyVisibility.Visible));
-                PendingOperations = group.Add(new VocabularyKey("PendingOperations", VocabularyKeyDataType.Text, VocabularyKeyVisibility.Visible));
+                //PendingOperations = group.Add(new VocabularyKey("PendingOperations", VocabularyKeyDataType.Text, VocabularyKeyVisibility.Visible));
                 Photo = group.Add(new VocabularyKey("Photo", VocabularyKeyDataType.Boolean, VocabularyKeyVisibility.Visible));
                 Publication = group.Add(new VocabularyKey("Publication", VocabularyKeyDataType.Boolean, VocabularyKeyVisibility.Visible));
                 RemoteItem = group.Add(new VocabularyKey("RemoteItem", VocabularyKeyDataType.Boolean, VocabularyKeyVisibility.Visible));
@@ -61,7 +61,7 @@ namespace CluedIn.Crawling.OneDriveCrawler.Vocabularies
         
         public VocabularyKey Audio { get; private set; }
         
-        public VocabularyKey Content { get; private set; }
+        //public VocabularyKey Content { get; private set; }
         
         public VocabularyKey CreatedBy { get; private set; }
         
@@ -99,7 +99,7 @@ namespace CluedIn.Crawling.OneDriveCrawler.Vocabularies
         
         public VocabularyKey ParentReference { get; private set; }
         
-        public VocabularyKey PendingOperations { get; private set; }
+        //public VocabularyKey PendingOperations { get; private set; }
         
         public VocabularyKey Photo { get; private set; }
         

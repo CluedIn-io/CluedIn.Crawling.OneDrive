@@ -28,7 +28,7 @@ namespace CluedIn.Crawling.OneDriveCrawler.ClueProducers
                 value += "|" + input.WebUrl;
             }
 
-            var clue = factory.Create(EntityType.Files, value, accountId);
+            var clue = factory.Create("/DriveItem", value, accountId); //EntityType.Files.File
 
             var driveitemVocabulary = new DriveItemVocabulary();
 
