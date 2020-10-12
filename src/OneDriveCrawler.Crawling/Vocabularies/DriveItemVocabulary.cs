@@ -28,6 +28,7 @@ namespace CluedIn.Crawling.OneDriveCrawler.Vocabularies
                 Folder = group.Add(new VocabularyKey("Folder", VocabularyKeyDataType.Boolean, VocabularyKeyVisibility.Visible));
                 Id = group.Add(new VocabularyKey("Id", VocabularyKeyDataType.Text, VocabularyKeyVisibility.Visible));
                 Image = group.Add(new VocabularyKey("Image", VocabularyKeyDataType.Boolean, VocabularyKeyVisibility.Visible));
+                LastAccessedDateTime = group.Add(new VocabularyKey("LastAccessedDateTime", VocabularyKeyDataType.DateTime, VocabularyKeyVisibility.Visible));
                 LastModifiedBy = group.Add(new VocabularyKey("LastModifiedBy", VocabularyKeyDataType.DateTime, VocabularyKeyVisibility.Visible));
                 LastModifiedDateTime = group.Add(new VocabularyKey("LastModifiedDateTime", VocabularyKeyDataType.DateTime, VocabularyKeyVisibility.Visible));
                 Location = group.Add(new VocabularyKey("Location", VocabularyKeyDataType.Text, VocabularyKeyVisibility.Visible));
@@ -84,6 +85,8 @@ namespace CluedIn.Crawling.OneDriveCrawler.Vocabularies
         
         public VocabularyKey Image { get; private set; }
         
+        public VocabularyKey LastAccessedDateTime { get; private set; }
+
         public VocabularyKey LastModifiedBy { get; private set; }
         
         public VocabularyKey LastModifiedDateTime { get; private set; }

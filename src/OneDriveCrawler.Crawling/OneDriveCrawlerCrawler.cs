@@ -2,6 +2,7 @@ using System.Collections.Generic;
 
 using CluedIn.Core.Crawling;
 using CluedIn.Crawling.OneDriveCrawler.Core;
+using CluedIn.Crawling.OneDriveCrawler.Core.Models;
 using CluedIn.Crawling.OneDriveCrawler.Infrastructure.Factories;
 
 namespace CluedIn.Crawling.OneDriveCrawler
@@ -24,7 +25,7 @@ namespace CluedIn.Crawling.OneDriveCrawler
             var client = clientFactory.CreateNew(onedrivecrawlercrawlJobData);
 
             foreach (var item in client.GetDriveItems())
-                yield return item;
+                yield return new DriveItem(item);
         }       
     }
 }
