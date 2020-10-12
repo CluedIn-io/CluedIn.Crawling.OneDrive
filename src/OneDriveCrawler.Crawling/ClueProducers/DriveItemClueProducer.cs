@@ -5,6 +5,9 @@ using CluedIn.Crawling.Helpers;
 using CluedIn.Crawling.OneDriveCrawler.Vocabularies;
 using CluedIn.Crawling.OneDriveCrawler.Core.Models;
 using Castle.Core.Internal;
+using System.Linq;
+using CluedIn.Core;
+using RuleConstants = CluedIn.Core.Constants.Validation.Rules;
 
 namespace CluedIn.Crawling.OneDriveCrawler.ClueProducers
 {
@@ -30,7 +33,13 @@ namespace CluedIn.Crawling.OneDriveCrawler.ClueProducers
             var driveitemVocabulary = new DriveItemVocabulary();
 
             var data = clue.Data.EntityData;
-            data.Name = input.Name;
+            data.Name = $"File {input.Name} - ID: {input.Id} - URL: {input.WebUrl}";
+
+            Uri url;
+            if (Uri.TryCreate(input.WebUrl, UriKind.Absolute, out url))
+            {
+                data.Uri = url;
+            }
 
             if (input.CreatedBy != null)
             {
@@ -49,6 +58,9 @@ namespace CluedIn.Crawling.OneDriveCrawler.ClueProducers
                 factory.CreateOutgoingEntityReference(clue, EntityType.Files.File, EntityEdgeType.SimilarTo, input.RemoteItem, input.RemoteItem);
                 data.Properties[driveitemVocabulary.RemoteItem] = input.RemoteItem.PrintIfAvailable();
             }
+
+            if (!data.OutgoingEdges.Any())
+                this.factory.CreateEntityRootReference(clue, EntityEdgeType.PartOf);
 
             data.Properties[driveitemVocabulary.Audio] = input.Audio.PrintIfAvailable();
             //data.Properties[driveitemVocabulary.Content] = input.Content.PrintIfAvailable();
@@ -82,6 +94,15 @@ namespace CluedIn.Crawling.OneDriveCrawler.ClueProducers
             data.Properties[driveitemVocabulary.Video] = input.Video.PrintIfAvailable();
             data.Properties[driveitemVocabulary.WebDavUrl] = input.WebDavUrl.PrintIfAvailable();
             data.Properties[driveitemVocabulary.WebUrl] = input.WebUrl.PrintIfAvailable();
+
+            clue.ValidationRuleSuppressions.AddRange(new[]
+                                        {
+                                RuleConstants.METADATA_001_Name_MustBeSet,
+                                RuleConstants.PROPERTIES_001_MustExist,
+                                RuleConstants.METADATA_002_Uri_MustBeSet,
+                                RuleConstants.METADATA_003_Author_Name_MustBeSet,
+                                RuleConstants.METADATA_005_PreviewImage_RawData_MustBeSet
+                            });
 
             return clue;
         }

@@ -4,11 +4,13 @@ using Newtonsoft.Json;
 
 namespace CluedIn.Crawling.OneDriveCrawler.Core.Models
 {
-    public class DriveItem :  IIdentifiable
+    // This is a custom defined DriveItem class that represents Microsoft.Graph.DriveItem class. 
+    public class DriveItem : IIdentifiable
     {
         [JsonIgnore]
         object IIdentifiable.Id => Id;
 
+        // The constructor takes the Graph DriveItem object and converts it to current type, compatible with CluedIn model.
         public DriveItem(Microsoft.Graph.DriveItem item)
         {
             Id = item.Id;
