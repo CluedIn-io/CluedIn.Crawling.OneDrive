@@ -43,11 +43,11 @@ namespace CluedIn.Crawling.OneDriveCrawler.ClueProducers
 
             if (input.CreatedBy != null)
             {
-                factory.CreateIncomingEntityReference(clue, EntityType.Person, EntityEdgeType.CreatedBy, input.CreatedBy, input.CreatedBy);
+                factory.CreateOutgoingEntityReference(clue, EntityType.Person, EntityEdgeType.CreatedBy, input.CreatedBy, input.CreatedBy);
                 data.Properties[driveitemVocabulary.CreatedBy] = input.CreatedBy.PrintIfAvailable();
             }
 
-            if (input.CreatedBy != null)
+            if (input.ParentReference != null)
             {
                 factory.CreateOutgoingEntityReference(clue, EntityType.Files.File, EntityEdgeType.Parent, input.ParentReference, input.ParentReference);
                 data.Properties[driveitemVocabulary.ParentReference] = input.ParentReference.PrintIfAvailable();
