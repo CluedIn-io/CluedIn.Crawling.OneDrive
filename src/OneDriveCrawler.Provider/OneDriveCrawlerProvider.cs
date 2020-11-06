@@ -37,18 +37,10 @@ namespace CluedIn.Provider.OneDriveCrawler
             if (configuration == null)
                 throw new ArgumentNullException(nameof(configuration));
 
-            var onedrivecrawlerCrawlJobData = new OneDriveCrawlerCrawlJobData();
+            var onedrivecrawlerCrawlJobData = new OneDriveCrawlerCrawlJobData(configuration);
 
             // Tenant and app IDs are created when regiestering the application in Azure Active Directory
             // https://docs.microsoft.com/en-us/learn/modules/msgraph-access-file-data/3-exercise-access-files-onedrive
-            if (configuration.ContainsKey(OneDriveCrawlerConstants.KeyName.UserName))
-                onedrivecrawlerCrawlJobData.UserName = configuration[OneDriveCrawlerConstants.KeyName.UserName].ToString();
-            if (configuration.ContainsKey(OneDriveCrawlerConstants.KeyName.Password))
-                onedrivecrawlerCrawlJobData.Password = configuration[OneDriveCrawlerConstants.KeyName.Password].ToString();
-            if (configuration.ContainsKey(OneDriveCrawlerConstants.KeyName.TenantId))
-                onedrivecrawlerCrawlJobData.TenantId = configuration[OneDriveCrawlerConstants.KeyName.TenantId].ToString();
-            if (configuration.ContainsKey(OneDriveCrawlerConstants.KeyName.ApplicationId))
-                onedrivecrawlerCrawlJobData.ApplicationId = configuration[OneDriveCrawlerConstants.KeyName.ApplicationId].ToString();
 
             return await Task.FromResult(onedrivecrawlerCrawlJobData);
         }

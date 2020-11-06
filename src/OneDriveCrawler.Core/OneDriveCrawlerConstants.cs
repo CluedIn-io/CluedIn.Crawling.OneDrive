@@ -14,6 +14,7 @@ namespace CluedIn.Crawling.OneDriveCrawler.Core
             public const string Password = nameof(Password);
             public const string TenantId = nameof(TenantId);
             public const string ApplicationId = nameof(ApplicationId);
+            public const string AppAuth = nameof(AppAuth);
         }
 
         // TODO Complete the following section

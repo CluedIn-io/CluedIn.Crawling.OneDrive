@@ -101,7 +101,7 @@ namespace CluedIn.Crawling.OneDriveCrawler.Infrastructure
             var cca = PublicClientApplicationBuilder.Create(clientId)
                                                     .WithAuthority(authority)
                                                     .Build();
-            return MsalAuthenticationProvider.GetInstance(cca, scopes.ToArray(), userName, userPassword);
+            return MsalAuthenticationProvider.GetInstance(cca, scopes.ToArray(), userName, userPassword, config.TenantId, config.Password, config.AppAuth);
         }
 
         private static GraphServiceClient GetAuthenticatedGraphClient(OneDriveCrawlerCrawlJobData config, string userName, SecureString userPassword)
