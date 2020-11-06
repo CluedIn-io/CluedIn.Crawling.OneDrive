@@ -106,6 +106,10 @@ namespace CluedIn.Crawling.OneDriveCrawler.Infrastructure
 
         private static GraphServiceClient GetAuthenticatedGraphClient(OneDriveCrawlerCrawlJobData config, string userName, SecureString userPassword)
         {
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+
+            WebRequest.DefaultWebProxy = new WebProxy("dk.proxy.mid.dom");
+
             var authenticationProvider = CreateAuthorizationProvider(config, userName, userPassword);
             var graphClient = new GraphServiceClient(authenticationProvider);
             return graphClient;
