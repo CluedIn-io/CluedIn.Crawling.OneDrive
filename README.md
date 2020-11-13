@@ -1,17 +1,17 @@
-# CluedIn.Crawling.OneDriveCrawler
+# CluedIn.Crawling.OneDrive
 
-CluedIn crawler for OneDriveCrawler.
+CluedIn crawler for OneDrive.
 
-[![Build Status](https://dev.azure.com/CluedIn-io/CluedIn%20Crawlers/_apis/build/status/CluedIn-io.CluedIn.Crawling.OneDriveCrawler?branchName=master)](https://dev.azure.com/CluedIn-io/CluedIn%20Crawlers/_build/latest?definitionId=TODO&branchName=master)
+[![Build Status](https://dev.azure.com/CluedIn-io/CluedIn%20Crawlers/_apis/build/status/CluedIn-io.CluedIn.Crawling.OneDrive?branchName=master)](https://dev.azure.com/CluedIn-io/CluedIn%20Crawlers/_build/latest?definitionId=TODO&branchName=master)
 ------
 
 ## Overview
 
-This repository contains the code and associated tests for the OneDriveCrawler crawler.
+This repository contains the code and associated tests for the OneDrive crawler.
 
 ## Working with the Code
 
-Load [Crawling.OneDriveCrawler.sln](.\Crawling.OneDriveCrawler.sln) in Visual Studio or your preferred development IDE.
+Load [Crawling.OneDrive.sln](.\Crawling.OneDrive.sln) in Visual Studio or your preferred development IDE.
 
 ### Running Tests
 
@@ -48,7 +48,7 @@ docker-compose logs wiremock
 
 ## References
 
-* [OneDriveCrawler](TODO)
+* [OneDrive](TODO)
 
 ### Tooling
 
