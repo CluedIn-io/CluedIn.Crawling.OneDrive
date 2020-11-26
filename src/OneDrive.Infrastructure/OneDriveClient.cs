@@ -1,70 +1,127 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using CluedIn.Core;
 using CluedIn.Core.Logging;
 using CluedIn.Core.Providers;
 using CluedIn.Crawling.OneDrive.Core;
+using Microsoft.Graph;
+using Microsoft.Identity.Client;
 using Newtonsoft.Json;
 using RestSharp;
 
 namespace CluedIn.Crawling.OneDrive.Infrastructure
 {
-    // TODO - This class should act as a client to retrieve the data to be crawled.
-    // It should provide the appropriate methods to get the data
-    // according to the type of data source (e.g. for AD, GetUsers, GetRoles, etc.)
-    // It can receive a IRestClient as a dependency to talk to a RestAPI endpoint.
-    // This class should not contain crawling logic (i.e. in which order things are retrieved)
     public class OneDriveClient
     {
-        private const string BaseUri = "http://sample.com";
-
         private readonly ILogger log;
 
-        private readonly IRestClient client;
+        private readonly OneDriveCrawlJobData onedriveCrawlJobData;
 
-        public OneDriveClient(ILogger log, OneDriveCrawlJobData onedriveCrawlJobData, IRestClient client) // TODO: pass on any extra dependencies
+        public readonly GraphServiceClient graphClient;
+
+        public OneDriveClient(ILogger log, OneDriveCrawlJobData onedriveCrawlJobData, IRestClient client)
         {
-            if (onedriveCrawlJobData == null)
-            {
-                throw new ArgumentNullException(nameof(onedriveCrawlJobData));
-            }
-
-            if (client == null)
-            {
-                throw new ArgumentNullException(nameof(client));
-            }
-
             this.log = log ?? throw new ArgumentNullException(nameof(log));
-            this.client = client ?? throw new ArgumentNullException(nameof(client));
+            this.onedriveCrawlJobData = onedriveCrawlJobData ?? throw new ArgumentNullException(nameof(onedriveCrawlJobData));
 
-            // TODO use info from onedriveCrawlJobData to instantiate the connection
-            client.BaseUrl = new Uri(BaseUri);
-            client.AddDefaultParameter("api_key", onedriveCrawlJobData.ApiKey, ParameterType.QueryString);
+            var confidentialClientApplication = ConfidentialClientApplicationBuilder
+                   .Create(onedriveCrawlJobData.ClientID)
+                   .WithAuthority($"https://login.microsoftonline.com/{onedriveCrawlJobData.Tenant}/v2.0")
+                   .WithClientSecret(onedriveCrawlJobData.ClientSecret)
+                   .Build();
+
+            graphClient =
+              new GraphServiceClient(new DelegateAuthenticationProvider(async (requestMessage) =>
+              {
+                  var authResult = await confidentialClientApplication
+                        .AcquireTokenForClient(new string[] { "https://graph.microsoft.com/.default" })
+                        .ExecuteAsync();
+
+                  requestMessage.Headers.Authorization =
+                     new AuthenticationHeaderValue("Bearer", authResult.AccessToken);
+              })
+              );
         }
 
-        private async Task<T> GetAsync<T>(string url)
+        public IEnumerable<IDriveItemChildrenCollectionPage> GetDriveItems(string id = null)
         {
-            var request = new RestRequest(url, Method.GET);
+            IDriveItemChildrenCollectionRequestBuilder driveItemChildrenCollectionRequest;
+            IDriveItemChildrenCollectionPage data;
+            if (id != null)
+                driveItemChildrenCollectionRequest = graphClient.Drive.Items[id].Children;
+            else
+                driveItemChildrenCollectionRequest = graphClient.Drive.Root.Children;
+            log.Info(driveItemChildrenCollectionRequest.RequestUrl);
+            data = driveItemChildrenCollectionRequest.Request()
+                .Filter("lastModifiedDateTime ge " + (onedriveCrawlJobData.LastCrawlFinishTime - new TimeSpan(24, 0, 0)))
+                .Top(100)
+                .GetAsync().Result;
+            foreach (var item in data)
+            {
+                if (item.Folder != null)
+                    foreach (var page in GetDriveItems(item.Id))
+                        yield return page;
+            }
 
-            var response = await client.ExecuteTaskAsync(request);
+            var pageIterator = PageIterator<DriveItem>
+    .CreatePageIterator(graphClient, data, (m) =>
+    {
+        return true;
+    });
+            pageIterator.IterateAsync();
+
+            yield return data;
+        }
+
+        private async Task<T> GetAsync<T>(HttpMethod httpMethod, string url, HttpContent httpContent = null)
+        {
+            var request = new HttpRequestMessage(httpMethod, url);
+
+            if (httpContent != null)
+            {
+                request.Content = httpContent;
+            }
+
+            var response = await ActionExtensions.ExecuteWithRetryAsync(async () => { return await graphClient.HttpProvider.SendAsync(request); });
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                var diagnosticMessage = $"Request to {client.BaseUrl}{url} failed, response {response.ErrorMessage} ({response.StatusCode})";
+                var diagnosticMessage = $"Request to {graphClient.BaseUrl}{url} failed, response {response.Content} ({response.StatusCode})";
                 log.Error(() => diagnosticMessage);
                 throw new InvalidOperationException($"Communication to jsonplaceholder unavailable. {diagnosticMessage}");
             }
 
-            var data = JsonConvert.DeserializeObject<T>(response.Content);
+            var data = JsonConvert.DeserializeObject<T>(response.Content.ReadAsStringAsync().Result);
 
             return data;
         }
 
+        public async Task<T> PostAsync<T>(string url, HttpContent httpContent) =>
+             await GetAsync<T>(HttpMethod.Post, url, httpContent);
+
+        public async Task<T> GetAsync<T>(string url) =>
+            await GetAsync<T>(HttpMethod.Get, url);
+
+        public async Task<T> DeleteAsync<T>(string url, HttpContent httpContent = null) =>
+            await GetAsync<T>(HttpMethod.Delete, url, httpContent);
+
+        public async Task<T> PutAsync<T>(string url, HttpContent httpContent) =>
+             await GetAsync<T>(HttpMethod.Put, url, httpContent);
+
         public AccountInformation GetAccountInformation()
         {
-            //TODO - return some unique information about the remote data source
-            // that uniquely identifies the account
-            return new AccountInformation("", ""); 
+            var response = ActionExtensions.ExecuteWithRetry(() => { return graphClient.Me.Request().GetAsync().Result; });
+            if (response == null)
+                return new AccountInformation(string.Empty, string.Empty);
+            if (!string.IsNullOrWhiteSpace(response.DisplayName))
+                return new AccountInformation(response.Id, response.DisplayName);
+            else
+
+                return new AccountInformation(response.Id, response.Id);
         }
     }
 }

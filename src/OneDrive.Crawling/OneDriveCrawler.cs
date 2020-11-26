@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-
 using CluedIn.Core.Crawling;
 using CluedIn.Crawling.OneDrive.Core;
 using CluedIn.Crawling.OneDrive.Infrastructure.Factories;
@@ -23,8 +22,9 @@ namespace CluedIn.Crawling.OneDrive
 
             var client = clientFactory.CreateNew(onedrivecrawlJobData);
 
-            //retrieve data from provider and yield objects
-            
-        }       
-    }
+            foreach (var page in client.GetDriveItems())
+                foreach (var item in page)
+                    yield return item;
+        }
+    } 
 }

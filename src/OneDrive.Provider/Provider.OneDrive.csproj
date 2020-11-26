@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{E1744515-A08B-4972-9185-0D56131AC429}</ProjectGuid>
     <RootNamespace>CluedIn.Provider.OneDrive</RootNamespace>
@@ -17,19 +17,21 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Resources\cluedin.png" />
+    <None Remove="Resources\onedrive.png" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Configuration" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\OneDrive.Core\Crawling.OneDrive.Core.csproj" />
+    <ProjectReference Include="..\OneDrive.Crawling\Crawling.OneDrive.csproj" />
     <ProjectReference Include="..\OneDrive.Infrastructure\Crawling.OneDrive.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\cluedin.png" />
     <EmbeddedResource Include="OneDriveProviderComponent.config">
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\onedrive.png" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CluedIn.Core" Version="2.4.0" />
@@ -43,6 +45,7 @@
     <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.2" />
     <PackageReference Include="Microsoft.AspNet.WebApi.WebHost" Version="5.2.2" />
     <PackageReference Include="Microsoft.CSharp" Version="4.6.0" />
+    <PackageReference Include="Microsoft.Graph" Version="1.21.0" />
     <PackageReference Include="Microsoft.Net.Http" Version="2.2.29" />
     <PackageReference Include="Microsoft.Web.Xdt" Version="2.1.1" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
@@ -50,8 +53,5 @@
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
     <PackageReference Include="System.IO.Compression" Version="4.3.0" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Resources\" />
   </ItemGroup>
 </Project>

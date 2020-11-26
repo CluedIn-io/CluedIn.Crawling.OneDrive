@@ -10,35 +10,55 @@ namespace CluedIn.Crawling.OneDrive.Core
         public struct KeyName
         {
             public const string ApiKey = nameof(ApiKey);
+            public const string TargetUrl = nameof(TargetUrl);
+            public const string Tenant = nameof(Tenant);
+            public const string ClientID = nameof(ClientID);
+            public const string ClientSecret = nameof(ClientSecret);
         }
 
-        // TODO Complete the following section
-        // Please see https://cluedin-io.github.io/CluedIn.Documentation/docs/1-Integration/build-integration.html
-        public const string CrawlerDescription = "OneDrive is a ... to be completed ...";
-        public const string Instructions = "Provide authentication instructions here, if applicable";
+        public const string CrawlerDescription = "Microsoft OneDrive is a file hosting service and synchronization service operated by Microsoft as part of its web version of Office.";
+        public const string Instructions = "";
         public const IntegrationType Type = IntegrationType.Cloud;
-        public const string Uri = "http://www.sampleurl.com"; //Uri of remote tool if applicable
+        public const string Uri = "https://www.microsoft.com/en/microsoft-365/onedrive/online-cloud-storage";
 
-        // To change the icon see embedded resource
-        // src\OneDrive.Provider\Resources\cluedin.png
-        public const string IconResourceName = "Resources.cluedin.png";
+        public const string IconResourceName = "Resources.onedrive.png";
 
         public static IList<string> ServiceType = new List<string> { "" };
-        public static IList<string> Aliases = new List<string> { "" };
+        public static IList<string> Aliases = new List<string> { "Microsoft OneDrive" };
         public const string Category = "";
         public const string Details = "";
         public static AuthMethods AuthMethods = new AuthMethods()
         {
-            token = new Control[]
+            credentials = new Control[]
             {
-        // You can define controls to show in the GUI in order to authenticate with this integration
-        //        new Control()
-        //        {
-        //            displayName = "API key",
-        //            isRequired = false,
-        //            name = "api",
-        //            type = "text"
-        //        }
+                new Control()
+                {
+                    displayName = KeyName.TargetUrl,
+                    isRequired = false,
+                    name = KeyName.TargetUrl,
+                    type = "text"
+                },
+                new Control()
+                {
+                    displayName = KeyName.Tenant,
+                    isRequired = false,
+                    name = KeyName.Tenant,
+                    type = "text"
+                },
+                new Control()
+                {
+                    displayName = KeyName.ClientID,
+                    isRequired = false,
+                    name = KeyName.ClientID,
+                    type = "text"
+                },
+                new Control()
+                {
+                    displayName = KeyName.ClientSecret,
+                    isRequired = false,
+                    name = KeyName.ClientSecret,
+                    type = "password"
+                }
             }
         };
 
@@ -59,10 +79,10 @@ namespace CluedIn.Crawling.OneDrive.Core
         public static readonly Guid ProviderId = Guid.Parse("7fec5ac5-c2e6-4326-a41b-8a731fdcf9b5");
         public const string ProviderName = "OneDrive";
 
-        
+
         public const string ClientID = "";
         public const string ClientSecret = "";
-        
+
 
 
         public static readonly ComponentEmailDetails ComponentEmailDetails = new ComponentEmailDetails

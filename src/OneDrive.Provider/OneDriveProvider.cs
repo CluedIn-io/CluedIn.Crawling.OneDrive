@@ -37,9 +37,7 @@ namespace CluedIn.Provider.OneDrive
             if (configuration == null)
                 throw new ArgumentNullException(nameof(configuration));
 
-            var onedriveCrawlJobData = new OneDriveCrawlJobData();
-            if (configuration.ContainsKey(OneDriveConstants.KeyName.ApiKey))
-            { onedriveCrawlJobData.ApiKey = configuration[OneDriveConstants.KeyName.ApiKey].ToString(); }
+            var onedriveCrawlJobData = new OneDriveCrawlJobData(configuration);
 
             return await Task.FromResult(onedriveCrawlJobData);
         }
@@ -51,7 +49,11 @@ namespace CluedIn.Provider.OneDrive
             Guid userId,
             Guid providerDefinitionId)
         {
-            throw new NotImplementedException();
+            var onedriveClient = _onedriveClientFactory.CreateNew(new OneDriveCrawlJobData(configuration));
+            var accountInformation = onedriveClient.GetAccountInformation();
+            if (accountInformation.AccountId != string.Empty)
+                return Task.FromResult(true);
+            return Task.FromResult(false);
         }
 
         public override Task<ExpectedStatistics> FetchUnSyncedEntityStatistics(ExecutionContext context, IDictionary<string, object> configuration, Guid organizationId, Guid userId, Guid providerDefinitionId)
