@@ -15,21 +15,15 @@ using Newtonsoft.Json;
 
 namespace CluedIn.Providers.Mesh
 {
-    public class OneDrive_Command_MeshProcessor : BaseMeshProcessor //TODO: replace with common processor
+    public class OneDrive_Command_MeshProcessor : SaxoBank.Common.SaxoBankRedactionMeshProcessor
     {
         private readonly GraphServiceClient graphClient;
 
-        public EntityType[] EntityType { get; }
-        public string EditUrl { get; }
-        public ActionType ActionType { get; }
 
-        public OneDrive_Command_MeshProcessor(ApplicationContext appContext, OneDriveCrawlJobData oneDriveCrawlJobData, IOneDriveClientFactory onedriveClientFactory, string editUrl, ActionType actionType, params EntityType[] entityType)
-            : base(appContext)
+        public OneDrive_Command_MeshProcessor(ApplicationContext appContext, OneDriveCrawlJobData oneDriveCrawlJobData, IOneDriveClientFactory onedriveClientFactory, string editUrl, ActionType actionType)
+            : base(appContext, editUrl, ActionType.UPDATE, CluedIn.Core.Data.EntityType.Infrastructure.DirectoryItem)
         {
             graphClient = onedriveClientFactory.CreateNew(oneDriveCrawlJobData).graphClient;
-            EntityType = entityType;
-            EditUrl = editUrl;
-            ActionType = actionType;
         }
 
         public override Guid GetProviderId() =>
@@ -48,8 +42,14 @@ namespace CluedIn.Providers.Mesh
             var item = graphClient.Drive.Items[id].Request().GetAsync().Result;
             var stream = graphClient.Drive.Items[id].Content.Request().GetAsync().Result;
             var extension = item.Name.Split('.').LastOrDefault();
-            // var new = Replace( stream, extension, properties);
-            //var result = ReplaceLargeFile( item, new);
+            var redacted = Replace(stream, extension, properties.properties);
+            var result = ReplaceLargeFile(item, redacted);
+            if (result.UploadSucceeded)
+                return new List<QueryResponse>()
+                    {
+                        new QueryResponse() { Content = null, StatusCode = System.Net.HttpStatusCode.OK }
+                    };
+
             return new List<QueryResponse>()
             {
                 new QueryResponse() { Content = null, StatusCode = System.Net.HttpStatusCode.InternalServerError }
