@@ -9,12 +9,13 @@ using CluedIn.Core.IO;
 using CluedIn.Crawling.Factories;
 using CluedIn.Crawling.Helpers;
 using CluedIn.Crawling.OneDrive.Core;
+using CluedIn.Crawling.OneDrive.Core.Models;
 using CluedIn.Crawling.OneDrive.Vocabularies;
 using Microsoft.Graph;
 
 namespace CluedIn.Crawling.OneDrive.ClueProducers
 {
-    public partial class DriveItemClueProducer : BaseClueProducer<Microsoft.Graph.DriveItem>
+    public partial class DriveItemClueProducer : BaseClueProducer<CluedInDriveItem>
     {
         private readonly IClueFactory factory;
         private readonly IAgentJobProcessorArguments state;
@@ -27,7 +28,7 @@ namespace CluedIn.Crawling.OneDrive.ClueProducers
             this.appContext = appContext;
         }
 
-        protected override Clue MakeClueImpl(Microsoft.Graph.DriveItem input, Guid accountId)
+        protected override Clue MakeClueImpl(CluedInDriveItem input, Guid accountId)
         {
             var clue = factory.Create(EntityType.Infrastructure.DirectoryItem, input.Id, accountId);
             var data = clue.Data.EntityData;

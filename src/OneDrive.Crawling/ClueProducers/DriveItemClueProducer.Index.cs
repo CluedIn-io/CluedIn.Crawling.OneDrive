@@ -6,14 +6,15 @@ using CluedIn.Core.Data;
 using CluedIn.Core.FileTypes;
 using CluedIn.Core.IO;
 using CluedIn.Crawling.OneDrive.Core;
+using CluedIn.Crawling.OneDrive.Core.Models;
 using CluedIn.Crawling.OneDrive.Vocabularies;
 using Microsoft.Graph;
 
 namespace CluedIn.Crawling.OneDrive.ClueProducers
 {
-    public partial class DriveItemClueProducer : BaseClueProducer<Microsoft.Graph.DriveItem>
+    public partial class DriveItemClueProducer : BaseClueProducer<CluedInDriveItem>
     {      
-        private void Index([NotNull] DriveItem value, [NotNull] string webUrl, [NotNull] Clue clue)
+        private void Index([NotNull] CluedInDriveItem value, [NotNull] string webUrl, [NotNull] Clue clue)
         {
             var data = clue.Data;
 

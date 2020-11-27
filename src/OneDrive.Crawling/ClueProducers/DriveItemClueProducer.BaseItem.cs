@@ -1,12 +1,13 @@
 ﻿using System;
 using CluedIn.Core.Data;
 using CluedIn.Crawling.Helpers;
+using CluedIn.Crawling.OneDrive.Core.Models;
 using CluedIn.Crawling.OneDrive.Vocabularies;
 using Microsoft.Graph;
 
 namespace CluedIn.Crawling.OneDrive.ClueProducers
 {
-    public partial class DriveItemClueProducer : BaseClueProducer<Microsoft.Graph.DriveItem>
+    public partial class DriveItemClueProducer : BaseClueProducer<CluedInDriveItem>
     {
         private void PopulateBasicProperties(Clue clue, BaseItem input)
         {

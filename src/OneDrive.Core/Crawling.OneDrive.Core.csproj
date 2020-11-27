@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{46D89BED-5F80-454B-9496-3163759DBEB4}</ProjectGuid>
     <RootNamespace>CluedIn.Crawling.OneDrive.Core</RootNamespace>
@@ -17,6 +17,7 @@
   <ItemGroup>
     <PackageReference Include="CluedIn.Core" Version="2.4.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.6.0" />
+    <PackageReference Include="Microsoft.Graph" Version="1.21.0" />
     <PackageReference Include="System.IO.Compression" Version="4.3.0" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
   </ItemGroup>

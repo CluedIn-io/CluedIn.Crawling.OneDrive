@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using CluedIn.Core.Crawling;
 using CluedIn.Crawling.OneDrive.Core;
+using CluedIn.Crawling.OneDrive.Core.Models;
 using CluedIn.Crawling.OneDrive.Infrastructure.Factories;
 
 namespace CluedIn.Crawling.OneDrive
@@ -24,7 +25,7 @@ namespace CluedIn.Crawling.OneDrive
 
             foreach (var page in client.GetDriveItems())
                 foreach (var item in page)
-                    yield return item;
+                    yield return item as CluedInDriveItem;
         }
     } 
 }
