@@ -57,7 +57,9 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
                 driveItemChildrenCollectionRequest = graphClient.Drive.Root.Children;
             log.Info(driveItemChildrenCollectionRequest.RequestUrl);
             data = driveItemChildrenCollectionRequest.Request()
-                .Filter("lastModifiedDateTime ge " + (onedriveCrawlJobData.LastCrawlFinishTime - new TimeSpan(24, 0, 0)))
+                //.OrderBy("CreatedDateTime")
+                // .OrderBy("LastModifiedDateTime")
+                //.Filter($"(CreatedDateTime ge '{onedriveCrawlJobData.LastCrawlFinishTime:yyyy-MM-ddThh:mm:ssZ}' or LastModifiedDateTime ge '{onedriveCrawlJobData.LastCrawlFinishTime:yyyy-MM-ddThh:mm:ssZ})'")
                 .Top(100)
                 .GetAsync().Result;
             foreach (var item in data)

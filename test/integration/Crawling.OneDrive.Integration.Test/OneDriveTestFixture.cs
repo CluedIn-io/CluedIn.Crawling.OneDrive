@@ -1,5 +1,10 @@
+
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
+using Castle.MicroKernel.Registration;
+using CluedIn.Core.Agent.Jobs;
+using CluedIn.Core.Logging;
 using CluedIn.Crawling.OneDrive.Core;
 using CrawlerIntegrationTesting.Clues;
 using CrawlerIntegrationTesting.Log;
@@ -24,6 +29,18 @@ namespace CluedIn.Crawling.OneDrive.Integration.Test
             Log = debugCrawlerHost.AppContext.Container.Resolve<TestLogger>();
 
             debugCrawlerHost.ProcessClue += ClueStorage.AddClue;
+            
+            var debugAgentJobProcessorState = new CrawlerIntegrationTesting.CrawlerHost.DebugAgentJobProcessorState<OneDriveCrawlJobData>
+            {
+                Log = new LoggingTargetLogger(this.Log),
+                CancellationTokenSource = new System.Threading.CancellationTokenSource(),
+                JobData = new OneDriveCrawlJobData(OneDriveConfiguration.Create()),
+                Status = new AgentJobStatus(),
+                TaskFactory = new TaskFactory(),
+                Result = new AgentJobResult()
+            };
+            this.debugCrawlerHost.AppContext.Container.Register(Component.For<IAgentJobProcessorState<OneDriveCrawlJobData>>().Instance(debugAgentJobProcessorState));
+
 
             debugCrawlerHost.Execute(OneDriveConfiguration.Create(), OneDriveConstants.ProviderId);
         }

@@ -8,53 +8,60 @@ using CluedIn.Core.IO;
 using CluedIn.Crawling.OneDrive.Core;
 using CluedIn.Crawling.OneDrive.Core.Models;
 using CluedIn.Crawling.OneDrive.Vocabularies;
-using Microsoft.Graph;
 
 namespace CluedIn.Crawling.OneDrive.ClueProducers
 {
     public partial class DriveItemClueProducer : BaseClueProducer<CluedInDriveItem>
     {      
-        private void Index([NotNull] CluedInDriveItem value, [NotNull] string webUrl, [NotNull] Clue clue)
+        private void Index([NotNull] CluedInDriveItem input, [NotNull] string webUrl, [NotNull] Clue clue)
         {
             var data = clue.Data;
+            var value = input.DriveItem;
 
             string hash;
-
+            
             if (value.Size <= CluedIn.Core.Constants.MaxFileIndexingFileSize)
             {
-                using (var tempFile = new TemporaryFile(value.Name))
+                try
                 {
-                    Stream file = System.Net.WebRequest.Create(webUrl).GetResponse().GetResponseStream();
-                    using (var md5 = MD5.Create())
+                    using (var tempFile = new TemporaryFile(value.Name))
                     {
-                        using (var stream = file)
+                        Stream file = System.Net.WebRequest.Create(webUrl).GetResponse().GetResponseStream();
+                        using (var md5 = MD5.Create())
                         {
-                            var hashBytes = md5.ComputeHash(stream);
-
-                            hash = BitConverter.ToString(hashBytes);
-
-                            using (var fileStream = System.IO.File.Create(tempFile.FilePath))
+                            using (var stream = file)
                             {
-                                file.Seek(0, SeekOrigin.Begin);
-                                file.CopyTo(fileStream);
+                                var hashBytes = md5.ComputeHash(stream);
+
+                                hash = BitConverter.ToString(hashBytes);
+
+                                using (var fileStream = System.IO.File.Create(tempFile.FilePath))
+                                {
+                                    //file.Seek(0, SeekOrigin.Begin);
+                                    file.CopyTo(fileStream);
+                                }
                             }
                         }
+
+                        file.Close();
+
+                        data.EntityData.Codes.Add(new EntityCode(EntityType.Files.File, OneDriveConstants.CodeOrigin, hash));
+
+                       // MimeType mimeType = tempFile.FileInfo.ToMimeType();
+
+                        if (value.Name != null)
+                            data.EntityData.DocumentFileName = value.Name;
+
+                        data.EntityData.DocumentSize = tempFile.FileInfo.Length;
+                        //data.EntityData.DocumentMimeType = mimeType.Code;
+                        data.EntityData.Properties[OneDriveVocabularies.File.Hash] = hash;
+
+                        FileCrawlingUtility.IndexFile(tempFile, clue.Data, clue, state, appContext);
                     }
-
-                    file.Close();
-
-                    data.EntityData.Codes.Add(new EntityCode(EntityType.Files.File, OneDriveConstants.CodeOrigin, hash));
-
-                    MimeType mimeType = tempFile.FileInfo.ToMimeType();
-
-                    if (value.Name != null)
-                        data.EntityData.DocumentFileName = value.Name;
-
-                    data.EntityData.DocumentSize = tempFile.FileInfo.Length;
-                    data.EntityData.DocumentMimeType = mimeType.Code;
-                    data.EntityData.Properties[OneDriveVocabularies.File.Hash] = hash;
-
-                    FileCrawlingUtility.IndexFile(tempFile, clue.Data, clue, state, appContext);
+                }
+                catch (Exception ex)
+                {
+                    appContext.Container.GetLogger().Error(() => ex.Message, ex);
                 }
             }
             else

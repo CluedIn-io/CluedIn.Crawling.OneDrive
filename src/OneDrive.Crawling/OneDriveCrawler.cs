@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CluedIn.Core.Crawling;
 using CluedIn.Crawling.OneDrive.Core;
@@ -23,9 +24,12 @@ namespace CluedIn.Crawling.OneDrive
 
             var client = clientFactory.CreateNew(onedrivecrawlJobData);
 
+            if (onedrivecrawlJobData.LastCrawlFinishTime != default(DateTimeOffset))
+                onedrivecrawlJobData.LastCrawlFinishTime = onedrivecrawlJobData.LastCrawlFinishTime.AddHours(-3);
             foreach (var page in client.GetDriveItems())
                 foreach (var item in page)
-                    yield return item as CluedInDriveItem;
+                    if (item.CreatedDateTime > onedrivecrawlJobData.LastCrawlFinishTime || item.LastModifiedDateTime > onedrivecrawlJobData.LastCrawlFinishTime)
+                        yield return new CluedInDriveItem(item);
         }
-    } 
+    }
 }
