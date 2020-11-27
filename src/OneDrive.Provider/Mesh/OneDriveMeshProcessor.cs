@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http.Headers;
+using Aspose.Slides;
+using Aspose.Words;
 using CluedIn.Core;
 using CluedIn.Core.Data;
 using CluedIn.Core.Mesh;
@@ -11,20 +14,31 @@ using CluedIn.Crawling.OneDrive.Core;
 using CluedIn.Crawling.OneDrive.Infrastructure.Factories;
 using CluedIn.Crawling.OneDrive.Vocabularies;
 using Microsoft.Graph;
+using Microsoft.Identity.Client;
 using Newtonsoft.Json;
+using System.Threading;
+using Aspose.Cells;
+using ExecutionContext = CluedIn.Core.ExecutionContext;
 
 namespace CluedIn.Providers.Mesh
 {
-    public class OneDrive_Command_MeshProcessor : SaxoBank.Common.SaxoBankRedactionMeshProcessor
+    public class OneDrive_Command_MeshProcessor : SaxoBankRedactionMeshProcessor
     {
-        private readonly GraphServiceClient graphClient;
+        private GraphServiceClient graphClient;
 
 
-        public OneDrive_Command_MeshProcessor(ApplicationContext appContext, OneDriveCrawlJobData oneDriveCrawlJobData, IOneDriveClientFactory onedriveClientFactory, string editUrl, ActionType actionType)
-            : base(appContext, editUrl, ActionType.UPDATE, CluedIn.Core.Data.EntityType.Infrastructure.DirectoryItem)
+        public OneDrive_Command_MeshProcessor(ApplicationContext appContext) : base(appContext)
         {
-            graphClient = onedriveClientFactory.CreateNew(oneDriveCrawlJobData).graphClient;
+
         }
+
+        public OneDrive_Command_MeshProcessor(ApplicationContext appContext, string editUrl, ActionType actionType, params EntityType[] entityType)
+            : base(appContext, editUrl, ActionType.UPDATE, Core.Data.EntityType.Infrastructure.DirectoryItem)
+
+        {
+
+        }
+
 
         public override Guid GetProviderId() =>
           OneDriveConstants.ProviderId;
@@ -39,11 +53,16 @@ namespace CluedIn.Providers.Mesh
 
         public override List<QueryResponse> RunQueries(IDictionary<string, object> config, string id, Core.Mesh.Properties properties)
         {
+            if(graphClient == null)
+            {
+                graphClient = GetClient(config);
+            }
+
             var item = graphClient.Drive.Items[id].Request().GetAsync().Result;
             var stream = graphClient.Drive.Items[id].Content.Request().GetAsync().Result;
             var extension = item.Name.Split('.').LastOrDefault();
             var redacted = Replace(stream, extension, properties.properties);
-            var result = ReplaceLargeFile(item, redacted);
+            var result = ReplaceLargeFile(config, item, redacted);
             if (result.UploadSucceeded)
                 return new List<QueryResponse>()
                     {
@@ -56,8 +75,38 @@ namespace CluedIn.Providers.Mesh
             };
         }
 
+        private GraphServiceClient GetClient(IDictionary<string, object> config)
+        {
+            var onedriveCrawlJobData = new OneDriveCrawlJobData(config);
+
+            var confidentialClientApplication = ConfidentialClientApplicationBuilder
+                               .Create(onedriveCrawlJobData.ClientID)
+                               .WithAuthority($"https://login.microsoftonline.com/{onedriveCrawlJobData.Tenant}/v2.0")
+                               .WithClientSecret(onedriveCrawlJobData.ClientSecret)
+                               .Build();
+
+            graphClient =
+              new GraphServiceClient(new DelegateAuthenticationProvider(async (requestMessage) =>
+              {
+                  var authResult = await confidentialClientApplication
+                        .AcquireTokenForClient(new string[] { "https://graph.microsoft.com/.default" })
+                        .ExecuteAsync();
+
+                  requestMessage.Headers.Authorization =
+                     new AuthenticationHeaderValue("Bearer", authResult.AccessToken);
+              })
+              );
+
+            return graphClient;
+        }
+
         public override List<QueryResponse> Validate(ExecutionContext context, MeshDataCommand command, IDictionary<string, object> config, string id, MeshQuery query)
         {
+            if (graphClient == null)
+            {
+                graphClient = GetClient(config);
+            }
+
             var item = ActionExtensions.ExecuteWithRetry(() => { return graphClient.Drive.Items[id].Request().GetAsync().Result; });
 
             if (item == null)
@@ -72,8 +121,13 @@ namespace CluedIn.Providers.Mesh
 
         }
 
-        public UploadResult<DriveItem> ReplaceLargeFile(DriveItem item, Stream stream)
+        public UploadResult<DriveItem> ReplaceLargeFile(IDictionary<string, object> config, DriveItem item, Stream stream)
         {
+            if (graphClient == null)
+            {
+                graphClient = GetClient(config);
+            }
+
             UploadResult<DriveItem> uploadResult = null;
             using (var fileStream = (FileStream)stream)
             {
@@ -131,5 +185,131 @@ namespace CluedIn.Providers.Mesh
         {
             return new List<RawQuery>();
         }
+
     }
+
+    public abstract class SaxoBankRedactionMeshProcessor : BaseMeshProcessor
+    {
+        public EntityType[] EntityType { get; }
+        public string EditUrl { get; }
+        public ActionType ActionType { get; }
+
+        public SaxoBankRedactionMeshProcessor(ApplicationContext appContext) : base(appContext)
+        {
+
+        }
+
+        public SaxoBankRedactionMeshProcessor(ApplicationContext appContext, string editUrl, ActionType actionType, params EntityType[] entityType)
+            : base(appContext)
+        {
+            EntityType = entityType;
+            EditUrl = editUrl;
+            ActionType = actionType;
+        }
+
+        public override bool Accept(MeshDataCommand command, MeshQuery query, IEntity entity)
+        {
+            return command.ProviderId == this.GetProviderId() && query.Action == ActionType && EntityType.Contains(entity.EntityType);
+        }
+
+        public Stream Replace(Stream stream, string extension, List<Property> transforms)
+        {
+            Stream result = null;
+            bool replaceWords = false;
+            bool replaceCells = false;
+            bool replaceCsv = false;
+            bool replaceSlides = false;
+
+            switch (extension)
+            {
+                case ".doc":
+                case ".docm":
+                case ".docx":
+                case ".dot":
+                case ".dotx":
+                case ".dotm":
+                case ".odt":
+                case ".ott":
+                case ".rtf":
+                    replaceWords = true;
+                    break;
+
+                case ".xls":
+                case ".xlsb":
+                case ".xlsx":
+                case ".xlsm":
+                case ".xlt":
+                case ".xltm":
+                case ".xltx":
+                case ".ods":
+                case ".ots":
+                case ".numbers":
+                case ".nmbtemplate":
+                    replaceCells = true;
+                    break;
+
+                case ".csv":
+                    replaceCsv = true;
+                    break;
+
+                case ".pptx":
+                case ".ppt":
+                case ".pptm":
+                case ".pot":
+                case ".potm":
+                case ".potx":
+                case ".pps":
+                case ".ppsm":
+                case ".ppsx":
+                case ".odp":
+                case ".otp":
+                    replaceSlides = true;
+                    break;
+            }
+
+            if (replaceWords)
+            {
+                var doc = new Document(stream);
+                foreach (var key in transforms)
+                    doc.Range.Replace(key.name, key.value);
+                doc.Save(result, Aspose.Words.SaveFormat.Docx);
+            }
+            else if (replaceCells)
+            {
+                var doc = new Aspose.Cells.Workbook(stream);
+                foreach (var key in transforms)
+                    doc.Replace(key.name, key.value);
+                doc.Save(result, Aspose.Cells.SaveFormat.Xlsx);
+            }
+            else if (replaceCsv)
+            {
+
+            }
+            else if (replaceSlides)
+            {
+                using (var slideshow = new Presentation(stream))
+                {
+                    foreach (var slide in slideshow.Slides)
+                        foreach (var shape in slide.Shapes)
+                        {
+                            string str = shape.AlternativeText;
+                            foreach (var key in transforms)
+                            {
+                                if (str.Contains(key.name))
+                                {
+                                    int idx = str.IndexOf(key.name);
+
+                                    string strStartText = str.Substring(0, idx);
+                                    string strEndText = str.Substring(idx + key.name.Length, str.Length - 1 - (idx + key.name.Length - 1));
+                                    shape.AlternativeText = strStartText + key.value + strEndText;
+                                }
+                            }
+                            slideshow.Save(result, Aspose.Slides.Export.SaveFormat.Pptx);
+                        }
+                }
+            }
+            return result;
+        }
+    }
+
 }

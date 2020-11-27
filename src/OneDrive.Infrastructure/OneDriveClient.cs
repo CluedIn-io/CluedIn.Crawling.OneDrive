@@ -116,14 +116,7 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
 
         public AccountInformation GetAccountInformation()
         {
-            var response = ActionExtensions.ExecuteWithRetry(() => { return graphClient.Me.Request().GetAsync().Result; });
-            if (response == null)
-                return new AccountInformation(string.Empty, string.Empty);
-            if (!string.IsNullOrWhiteSpace(response.DisplayName))
-                return new AccountInformation(response.Id, response.DisplayName);
-            else
-
-                return new AccountInformation(response.Id, response.Id);
+            return new AccountInformation("d9fbb2a8-719d-4508-a08e-5b8ff351c592", "d9fbb2a8-719d-4508-a08e-5b8ff351c592");
         }
     }
 }

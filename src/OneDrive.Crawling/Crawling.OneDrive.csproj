@@ -28,8 +28,8 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="CluedIn.Core" Version="2.4.0" />
-    <PackageReference Include="CluedIn.Crawling" Version="2.4.0" />
+    <PackageReference Include="CluedIn.Core" Version="2.5.7-beta0190" />
+    <PackageReference Include="CluedIn.Crawling" Version="2.5.7-beta0190" />
     <PackageReference Include="CluedIn.SaxoBank.Common" Version="0.1.0-alpha0044" />
     <PackageReference Include="ComponentHost" Version="1.0.0.46" />
     <PackageReference Include="Microsoft.CSharp" Version="4.6.0" />
