@@ -10,7 +10,7 @@ namespace CluedIn.Crawling.OneDrive.Vocabularies
             VocabularyName = "OneDrive File";
             KeyPrefix = "onedrive.file";
             KeySeparator = ".";
-            Grouping = EntityType.Files.File;
+            Grouping = EntityType.Infrastructure.DirectoryItem;
 
             AddGroup("OneDrive File", group =>
             {

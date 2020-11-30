@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net;
 using System.Security.Cryptography;
 using CluedIn.Core;
 using CluedIn.Core.Data;
@@ -12,42 +13,45 @@ using CluedIn.Crawling.OneDrive.Vocabularies;
 namespace CluedIn.Crawling.OneDrive.ClueProducers
 {
     public partial class DriveItemClueProducer : BaseClueProducer<CluedInDriveItem>
-    {      
+    {
         private void Index([NotNull] CluedInDriveItem input, [NotNull] string webUrl, [NotNull] Clue clue)
         {
             var data = clue.Data;
             var value = input.DriveItem;
 
             string hash;
-            
+
             if (value.Size <= CluedIn.Core.Constants.MaxFileIndexingFileSize)
             {
                 try
                 {
                     using (var tempFile = new TemporaryFile(value.Name))
                     {
-                        Stream file = System.Net.WebRequest.Create(webUrl).GetResponse().GetResponseStream();
-                        using (var md5 = MD5.Create())
+                        using (var webClient = new WebClient())
                         {
-                            using (var stream = file)
+                            Stream file = new MemoryStream(webClient.DownloadData(webUrl));
+                            using (var md5 = MD5.Create())
                             {
-                                var hashBytes = md5.ComputeHash(stream);
-
-                                hash = BitConverter.ToString(hashBytes);
-
-                                using (var fileStream = System.IO.File.Create(tempFile.FilePath))
+                                using (var stream = file)
                                 {
-                                    //file.Seek(0, SeekOrigin.Begin);
-                                    file.CopyTo(fileStream);
+                                    var hashBytes = md5.ComputeHash(stream);
+
+                                    hash = BitConverter.ToString(hashBytes);
+
+                                    using (var fileStream = System.IO.File.Create(tempFile.FilePath))
+                                    {
+                                        file.Seek(0, SeekOrigin.Begin);
+                                        file.CopyTo(fileStream);
+                                    }
                                 }
                             }
+                            file.Close();
                         }
 
-                        file.Close();
 
                         data.EntityData.Codes.Add(new EntityCode(EntityType.Files.File, OneDriveConstants.CodeOrigin, hash));
 
-                       // MimeType mimeType = tempFile.FileInfo.ToMimeType();
+                        //MimeType mimeType = tempFile.FileInfo.ToMimeType();
 
                         if (value.Name != null)
                             data.EntityData.DocumentFileName = value.Name;
