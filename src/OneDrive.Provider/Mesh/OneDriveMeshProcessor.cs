@@ -10,20 +10,22 @@ using CluedIn.Core.Messages.WebApp;
 using CluedIn.Crawling.OneDrive.Core;
 using CluedIn.Crawling.OneDrive.Infrastructure.Factories;
 using CluedIn.Crawling.OneDrive.Vocabularies;
+using CluedIn.SaxoBank.Common;
 using Microsoft.Graph;
 using Newtonsoft.Json;
 
 namespace CluedIn.Providers.Mesh
 {
-    public class OneDrive_Command_MeshProcessor : SaxoBank.Common.SaxoBankRedactionMeshProcessor
+    public class OneDrive_Command_MeshProcessor : SaxoBankRedactionMeshProcessor
     {
-        private readonly GraphServiceClient graphClient;
+        private GraphServiceClient graphClient;
 
+        private IOneDriveClientFactory _onedriveClientFactory = null;
 
-        public OneDrive_Command_MeshProcessor(ApplicationContext appContext, OneDriveCrawlJobData oneDriveCrawlJobData, IOneDriveClientFactory onedriveClientFactory, string editUrl, ActionType actionType)
-            : base(appContext, editUrl, ActionType.UPDATE, CluedIn.Core.Data.EntityType.Infrastructure.DirectoryItem)
+        public OneDrive_Command_MeshProcessor(ApplicationContext appContext, IOneDriveClientFactory onedriveClientFactory)
+            : base(appContext, CluedIn.Core.Data.EntityType.Infrastructure.DirectoryItem)
         {
-            graphClient = onedriveClientFactory.CreateNew(oneDriveCrawlJobData).graphClient;
+            this._onedriveClientFactory = onedriveClientFactory;
         }
 
         public override Guid GetProviderId() =>
@@ -39,6 +41,7 @@ namespace CluedIn.Providers.Mesh
 
         public override List<QueryResponse> RunQueries(IDictionary<string, object> config, string id, Core.Mesh.Properties properties)
         {
+            graphClient = _onedriveClientFactory.CreateNew(new OneDriveCrawlJobData(config)).graphClient;
             var item = graphClient.Drive.Items[id].Request().GetAsync().Result;
             var stream = graphClient.Drive.Items[id].Content.Request().GetAsync().Result;
             var extension = item.Name.Split('.').LastOrDefault();

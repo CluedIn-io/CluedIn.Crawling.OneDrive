@@ -2,13 +2,14 @@ using Castle.MicroKernel.Registration;
 
 using CluedIn.Core;
 using CluedIn.Core.Providers;
+using CluedIn.Core.Server;
 // 
 using CluedIn.Core.Webhooks;
 // 
 using CluedIn.Crawling.OneDrive.Core;
 using CluedIn.Crawling.OneDrive.Infrastructure.Installers;
 // 
-using CluedIn.Provider.OneDrive.WebApi;
+//using CluedIn.Provider.OneDrive.WebApi;
 // 
 using CluedIn.Server;
 using ComponentHost;
@@ -16,7 +17,7 @@ using ComponentHost;
 namespace CluedIn.Provider.OneDrive
 {
     [Component(OneDriveConstants.ProviderName, "Providers", ComponentType.Service, ServerComponents.ProviderWebApi, Components.Server, Components.DataStores, Isolation = ComponentIsolation.NotIsolated)]
-    public sealed class OneDriveProviderComponent : ServiceApplicationComponent<EmbeddedServer>
+    public sealed class OneDriveProviderComponent : ServiceApplicationComponent<IServer>
     {
         public OneDriveProviderComponent(ComponentInfo componentInfo)
             : base(componentInfo)
@@ -37,8 +38,8 @@ namespace CluedIn.Provider.OneDrive
             Container.Register(Types.FromThisAssembly().BasedOn<IWebhookPrevalidator>().WithServiceFromInterface().If(t => !t.IsAbstract).LifestyleSingleton());
 
 
-            Container.Register(Component.For<OneDriveController>().UsingFactoryMethod(() => new OneDriveController(this)).LifestyleScoped());
-            Container.Register(Component.For<OneDriveOAuthController>().UsingFactoryMethod(() => new OneDriveOAuthController(this)).LifestyleScoped());
+           // Container.Register(Component.For<OneDriveController>().UsingFactoryMethod(() => new OneDriveController(this)).LifestyleScoped());
+           // Container.Register(Component.For<OneDriveOAuthController>().UsingFactoryMethod(() => new OneDriveOAuthController(this)).LifestyleScoped());
 
 
             State = ServiceState.Started;
