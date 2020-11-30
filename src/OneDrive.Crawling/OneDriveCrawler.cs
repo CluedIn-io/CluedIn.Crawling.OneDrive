@@ -26,10 +26,26 @@ namespace CluedIn.Crawling.OneDrive
 
             if (onedrivecrawlJobData.LastCrawlFinishTime != default(DateTimeOffset))
                 onedrivecrawlJobData.LastCrawlFinishTime = onedrivecrawlJobData.LastCrawlFinishTime.AddHours(-3);
+
+            foreach (var user in client.GetUsers())
+            {
+                foreach (var drive in client.GetDrives(user))
+                {
+                    foreach (var item in client.GetDriveItems(drive))
+                    {
+                        if (item.CreatedDateTime > onedrivecrawlJobData.LastCrawlFinishTime || item.LastModifiedDateTime > onedrivecrawlJobData.LastCrawlFinishTime)
+                            yield return new CluedInDriveItem(item);
+                    }
+                }
+            }
+
+            //this gets sharepoint files
+            /*
             foreach (var page in client.GetDriveItems())
                 foreach (var item in page)
                     if (item.CreatedDateTime > onedrivecrawlJobData.LastCrawlFinishTime || item.LastModifiedDateTime > onedrivecrawlJobData.LastCrawlFinishTime)
                         yield return new CluedInDriveItem(item);
+            */
         }
     }
 }

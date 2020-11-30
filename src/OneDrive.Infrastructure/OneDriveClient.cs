@@ -47,6 +47,49 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
               );
         }
 
+        public IEnumerable<User> GetUsers()
+        {
+            foreach (var user in graphClient.Users.Request().GetAsync().Result)
+                yield return user;
+        }
+
+
+        public IEnumerable<Drive> GetDrives(User user)
+        {
+            IUserDrivesCollectionPage drives = null;
+            try
+            {
+                drives = graphClient.Users[user.Id].Drives.Request().GetAsync().Result;
+            }
+            catch
+            {
+                log.Warn("Could not get Drives for User " + user.DisplayName);
+            }
+            if (drives != null)
+            {
+                log.Info("Got Drives for User" + user.DisplayName);
+                foreach (var drive in drives)
+                    yield return drive;
+            }
+        }
+
+        public IEnumerable<DriveItem> GetDriveItems(Drive drive)
+        {
+            IDriveItemChildrenCollectionPage items = null;
+            try
+            {
+                items = graphClient.Drives[drive.Id].Root.Children.Request().GetAsync().Result;
+            }
+            catch
+            {
+                log.Error("Could not get items for Drive " + drive.Name);
+            }
+
+            if (items != null)
+                foreach (var item in items)
+                    yield return item;
+        }
+
         public IEnumerable<IDriveItemChildrenCollectionPage> GetDriveItems(string id = null)
         {
             IDriveItemChildrenCollectionRequestBuilder driveItemChildrenCollectionRequest;
