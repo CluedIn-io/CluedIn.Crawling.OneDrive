@@ -16,16 +16,16 @@ using Newtonsoft.Json;
 
 namespace CluedIn.Providers.Mesh
 {
-    public class OneDrive_Command_MeshProcessor : SaxoBankRedactionMeshProcessor
+    public class OneDriveSaxoBankRedactionMeshProcessor : SaxoBankRedactionMeshProcessor
     {
         private GraphServiceClient graphClient;
 
-        private IOneDriveClientFactory _onedriveClientFactory = null;
+        private IOneDriveClientFactory onedriveClientFactory = null;
 
-        public OneDrive_Command_MeshProcessor(ApplicationContext appContext, IOneDriveClientFactory onedriveClientFactory)
+        public OneDriveSaxoBankRedactionMeshProcessor(ApplicationContext appContext, IOneDriveClientFactory onedriveClientFactory)
             : base(appContext, CluedIn.Core.Data.EntityType.Infrastructure.DirectoryItem)
         {
-            this._onedriveClientFactory = onedriveClientFactory;
+            this.onedriveClientFactory = onedriveClientFactory;
         }
 
         public override Guid GetProviderId() =>
@@ -41,22 +41,33 @@ namespace CluedIn.Providers.Mesh
 
         public override List<QueryResponse> RunQueries(IDictionary<string, object> config, string id, Core.Mesh.Properties properties)
         {
-            graphClient = _onedriveClientFactory.CreateNew(new OneDriveCrawlJobData(config)).graphClient;
-            var item = graphClient.Drive.Items[id].Request().GetAsync().Result;
-            var stream = graphClient.Drive.Items[id].Content.Request().GetAsync().Result;
-            var extension = item.Name.Split('.').LastOrDefault();
-            var redacted = Replace(stream, extension, properties.properties);
-            var result = ReplaceLargeFile(item, redacted);
-            if (result.UploadSucceeded)
-                return new List<QueryResponse>()
+            var client = onedriveClientFactory.CreateNew(new OneDriveCrawlJobData(config));
+            graphClient = client.graphClient;
+            DriveItem item = null;
+            foreach (var user in client.GetUsers())
+                foreach (var drive in client.GetDrives(user))
+                    foreach (var driveItem in client.GetDriveItems(drive))
+                        if (driveItem.Id == id)
+                            item = driveItem;
+
+            if (item != null)
+            {
+                var stream = graphClient.Drive.Items[id].Content.Request().GetAsync().Result;
+                var extension = item.Name.Split('.').LastOrDefault();
+                var redacted = Replace(stream, extension, properties.properties);
+                var result = ReplaceLargeFile(item, redacted);
+                if (result.UploadSucceeded)
+                    return new List<QueryResponse>()
                     {
                         new QueryResponse() { Content = null, StatusCode = System.Net.HttpStatusCode.OK }
-                    };
+    };
+
+            }
 
             return new List<QueryResponse>()
             {
                 new QueryResponse() { Content = null, StatusCode = System.Net.HttpStatusCode.InternalServerError }
-            };
+};
         }
 
         public override List<QueryResponse> Validate(ExecutionContext context, MeshDataCommand command, IDictionary<string, object> config, string id, MeshQuery query)
