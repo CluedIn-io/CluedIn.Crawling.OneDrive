@@ -43,24 +43,42 @@ namespace CluedIn.Providers.Mesh
         {
             var client = onedriveClientFactory.CreateNew(new OneDriveCrawlJobData(config));
             graphClient = client.graphClient;
+            Drive drive = null;
             DriveItem item = null;
             foreach (var user in client.GetUsers())
-                foreach (var drive in client.GetDrives(user))
-                    foreach (var driveItem in client.GetDriveItems(drive))
+                foreach (var d in client.GetDrives(user))
+                    foreach (var driveItem in client.GetDriveItems(d))
+                    {
                         if (driveItem.Id == id)
                             item = driveItem;
+                        drive = d;
+                    }
+                 
 
             if (item != null)
             {
                 var stream = graphClient.Drive.Items[id].Content.Request().GetAsync().Result;
                 var extension = item.Name.Split('.').LastOrDefault();
                 var redacted = Replace(stream, extension, properties.properties);
-                var result = ReplaceLargeFile(item, redacted);
-                if (result.UploadSucceeded)
-                    return new List<QueryResponse>()
+                if (item.Size < 4000000)
+                {
+                    var result = client.ReplaceFile(drive, item, redacted);
+                    if (result != null)
+                        return new List<QueryResponse>()
                     {
                         new QueryResponse() { Content = null, StatusCode = System.Net.HttpStatusCode.OK }
     };
+                }
+                else
+                {
+                    var result = client.ReplaceLargeFile(drive, item, redacted);
+                    if (result.UploadSucceeded)
+                        return new List<QueryResponse>()
+                    {
+                        new QueryResponse() { Content = null, StatusCode = System.Net.HttpStatusCode.OK }
+    };
+
+                }
 
             }
 
@@ -84,56 +102,6 @@ namespace CluedIn.Providers.Mesh
                 new QueryResponse() { Content = JsonConvert.SerializeObject(item), StatusCode = System.Net.HttpStatusCode.OK }
             };
 
-        }
-
-        public UploadResult<DriveItem> ReplaceLargeFile(DriveItem item, Stream stream)
-        {
-            UploadResult<DriveItem> uploadResult = null;
-            using (var fileStream = (FileStream)stream)
-            {
-                var uploadProps = new DriveItemUploadableProperties
-                {
-                    ODataType = null,
-                    AdditionalData = new Dictionary<string, object>
-                    {
-                        { "@microsoft.graph.conflictBehavior", "replace" }
-                    }
-                };
-
-                var uploadSession = graphClient.Drive.Root
-                    .ItemWithPath(item.Name)
-                    .CreateUploadSession(uploadProps)
-                    .Request()
-                    .PostAsync();
-
-                int maxSliceSize = 320 * 1024;
-                var fileUploadTask =
-                    new LargeFileUploadTask<DriveItem>(uploadSession.Result, fileStream, maxSliceSize);
-
-                IProgress<long> progress = new Progress<long>(slice =>
-                {
-                    Console.WriteLine($"Uploaded {slice} bytes of {fileStream.Length} bytes");
-                });
-
-                try
-                {
-                    uploadResult = fileUploadTask.UploadAsync(progress).Result;
-
-                    if (uploadResult.UploadSucceeded)
-                    {
-                        Console.WriteLine($"Upload complete, item ID: {uploadResult.ItemResponse.Id}");
-                    }
-                    else
-                    {
-                        Console.WriteLine("Upload failed");
-                    }
-                }
-                catch (ServiceException ex)
-                {
-                    Console.WriteLine($"Error uploading: {ex.ToString()}");
-                }
-            }
-            return uploadResult;
         }
 
         public override void DoProcess(ExecutionContext context, MeshDataCommand command, IDictionary<string, object> jobData, MeshQuery query)

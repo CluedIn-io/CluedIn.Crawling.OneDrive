@@ -38,14 +38,6 @@ namespace CluedIn.Crawling.OneDrive
                     }
                 }
             }
-
-            //this gets sharepoint files
-            /*
-            foreach (var page in client.GetDriveItems())
-                foreach (var item in page)
-                    if (item.CreatedDateTime > onedrivecrawlJobData.LastCrawlFinishTime || item.LastModifiedDateTime > onedrivecrawlJobData.LastCrawlFinishTime)
-                        yield return new CluedInDriveItem(item);
-            */
         }
     }
 }

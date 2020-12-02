@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -15,7 +16,7 @@ using RestSharp;
 
 namespace CluedIn.Crawling.OneDrive.Infrastructure
 {
-    public class OneDriveClient
+    public partial class OneDriveClient
     {
         private readonly ILogger log;
 
@@ -53,7 +54,6 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
                 yield return user;
         }
 
-
         public IEnumerable<Drive> GetDrives(User user)
         {
             IUserDrivesCollectionPage drives = null;
@@ -73,89 +73,49 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
             }
         }
 
-        public IEnumerable<DriveItem> GetDriveItems(Drive drive)
+        public IEnumerable<DriveItem> GetDriveItems(Drive drive, string folder = null)
         {
-            IDriveItemChildrenCollectionPage items = null;
+            int pageSize = 100;
+            IDriveItemChildrenCollectionPage page = null;
             try
             {
-                items = graphClient.Drives[drive.Id].Root.Children.Request().GetAsync().Result;
+                IDriveItemChildrenCollectionRequestBuilder builder = null;
+                if (folder != null)
+                    builder = graphClient.Drives[drive.Id].Items[folder].Children;
+                else
+                    builder = graphClient.Drives[drive.Id].Root.Children;
+                page = ActionExtensions.ExecuteWithRetry(() => { return builder.Request().Top(pageSize).GetAsync().Result; });
+                //TODO - not supported by default .OrderBy("CreatedDateTime")
             }
-            catch
+            catch (Exception ex)
             {
-                log.Error("Could not get items for Drive " + drive.Name);
+                log.Error(() => ex.Message, ex);
             }
-
-            if (items != null)
-                foreach (var item in items)
+            if (page != null)
+            {
+                foreach (var item in page)
+                {
+                    if (item.Folder != null)
+                        foreach (var folderItem in GetDriveItems(drive, item.Id))
+                            yield return folderItem;
                     yield return item;
-        }
-
-        public IEnumerable<IDriveItemChildrenCollectionPage> GetDriveItems(string id = null)
-        {
-            IDriveItemChildrenCollectionRequestBuilder driveItemChildrenCollectionRequest;
-            IDriveItemChildrenCollectionPage data;
-            if (id != null)
-                driveItemChildrenCollectionRequest = graphClient.Drive.Items[id].Children;
-            else
-                driveItemChildrenCollectionRequest = graphClient.Drive.Root.Children;
-            log.Info(driveItemChildrenCollectionRequest.RequestUrl);
-            data = driveItemChildrenCollectionRequest.Request()
-                //.OrderBy("CreatedDateTime")
-                // .OrderBy("LastModifiedDateTime")
-                //.Filter($"(CreatedDateTime ge '{onedriveCrawlJobData.LastCrawlFinishTime:yyyy-MM-ddThh:mm:ssZ}' or LastModifiedDateTime ge '{onedriveCrawlJobData.LastCrawlFinishTime:yyyy-MM-ddThh:mm:ssZ})'")
-                .Top(100)
-                .GetAsync().Result;
-            foreach (var item in data)
-            {
-                if (item.Folder != null)
-                    foreach (var page in GetDriveItems(item.Id))
-                        yield return page;
+                }
+                while (page.NextPageRequest != null)
+                {
+                    try
+                    {
+                        page = page.NextPageRequest.GetAsync().Result;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error(() => ex.Message, ex);
+                    }
+                    if (page != null)
+                        foreach (var item in page)
+                            yield return item;
+                }
             }
-
-            var pageIterator = PageIterator<DriveItem>
-    .CreatePageIterator(graphClient, data, (m) =>
-    {
-        return true;
-    });
-            pageIterator.IterateAsync();
-
-            yield return data;
         }
-
-        private async Task<T> GetAsync<T>(HttpMethod httpMethod, string url, HttpContent httpContent = null)
-        {
-            var request = new HttpRequestMessage(httpMethod, url);
-
-            if (httpContent != null)
-            {
-                request.Content = httpContent;
-            }
-
-            var response = await ActionExtensions.ExecuteWithRetryAsync(async () => { return await graphClient.HttpProvider.SendAsync(request); });
-
-            if (response.StatusCode != HttpStatusCode.OK)
-            {
-                var diagnosticMessage = $"Request to {graphClient.BaseUrl}{url} failed, response {response.Content} ({response.StatusCode})";
-                log.Error(() => diagnosticMessage);
-                throw new InvalidOperationException($"Communication to jsonplaceholder unavailable. {diagnosticMessage}");
-            }
-
-            var data = JsonConvert.DeserializeObject<T>(response.Content.ReadAsStringAsync().Result);
-
-            return data;
-        }
-
-        public async Task<T> PostAsync<T>(string url, HttpContent httpContent) =>
-             await GetAsync<T>(HttpMethod.Post, url, httpContent);
-
-        public async Task<T> GetAsync<T>(string url) =>
-            await GetAsync<T>(HttpMethod.Get, url);
-
-        public async Task<T> DeleteAsync<T>(string url, HttpContent httpContent = null) =>
-            await GetAsync<T>(HttpMethod.Delete, url, httpContent);
-
-        public async Task<T> PutAsync<T>(string url, HttpContent httpContent) =>
-             await GetAsync<T>(HttpMethod.Put, url, httpContent);
 
         public AccountInformation GetAccountInformation()
         {
@@ -164,6 +124,71 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
                 return new AccountInformation(string.Empty, string.Empty);
             else
                 return new AccountInformation(onedriveCrawlJobData.ClientID, onedriveCrawlJobData.ClientID);
+        }
+
+        public DriveItem ReplaceFile(Drive drive, DriveItem item, Stream stream)
+        {
+            DriveItem result = null;
+            result = ActionExtensions.ExecuteWithRetry(() =>
+            {
+                return graphClient.Drives[drive.Id].Items[item.Id].Content.Request().PutAsync<DriveItem>(stream).Result;
+            });
+
+            return result;
+        }
+
+        public UploadResult<DriveItem> ReplaceLargeFile(Drive drive, DriveItem item, Stream stream)
+        {
+            UploadResult<DriveItem> uploadResult = null;
+            using (var fileStream = (FileStream)stream)
+            {
+                var uploadProps = new DriveItemUploadableProperties
+                {
+                    ODataType = null,
+                    AdditionalData = new Dictionary<string, object>
+                    {
+                        { "@microsoft.graph.conflictBehavior", "replace" }
+                    }
+                };
+
+                var uploadSession = graphClient
+                    .Drives[drive.Id]
+                    .Items[item.Id]
+                    .CreateUploadSession(uploadProps)
+                    .Request()
+                    .PostAsync();
+
+                int maxSliceSize = 320 * 1024;
+                var fileUploadTask =
+                    new LargeFileUploadTask<DriveItem>(uploadSession.Result, fileStream, maxSliceSize);
+
+                IProgress<long> progress = new Progress<long>(slice =>
+                {
+                    log.Info($"Uploaded {slice} bytes of {fileStream.Length} bytes");
+                });
+
+                try
+                {
+                    uploadResult = ActionExtensions.ExecuteWithRetry(() =>
+                    {
+                       return fileUploadTask.UploadAsync(progress).Result;
+                    });
+
+                    if (uploadResult.UploadSucceeded)
+                    {
+                        log.Info($"Upload complete, item ID: {uploadResult.ItemResponse.Id}");
+                    }
+                    else
+                    {
+                        log.Error("Upload failed");
+                    }
+                }
+                catch (ServiceException ex)
+                {
+                    log.Error($"Error uploading: {ex.ToString()}");
+                }
+            }
+            return uploadResult;
         }
     }
 }
