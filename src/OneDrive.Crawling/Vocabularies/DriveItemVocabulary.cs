@@ -17,9 +17,9 @@ namespace CluedIn.Crawling.OneDrive.Vocabularies
                 WebDavUrl = group.Add(new VocabularyKey("WebDavUrl", VocabularyKeyDataType.Uri, VocabularyKeyVisibility.Visible));
                 Size = group.Add(new VocabularyKey("Size", VocabularyKeyDataType.Integer, VocabularyKeyVisibility.Visible));
                 CTag = group.Add(new VocabularyKey("CTag", VocabularyKeyDataType.Text, VocabularyKeyVisibility.Visible));
-                DriveOwnerUserEmail = group.Add(new VocabularyKey("OwnerUserEmail", VocabularyKeyDataType.Email, VocabularyKeyVisibility.Visible));
-                Path = group.Add(new VocabularyKey("Path", VocabularyKeyDataType.Text, VocabularyKeyVisibility.Visible));
-                DriveName = group.Add(new VocabularyKey("DriveName", VocabularyKeyDataType.Text, VocabularyKeyVisibility.Visible));
+                DriveOwnerUserEmail = group.Add(new VocabularyKey("OwnerUserEmail", VocabularyKeyDataType.Email, VocabularyKeyVisibility.Hidden));
+                Path = group.Add(new VocabularyKey("Path", VocabularyKeyDataType.Text, VocabularyKeyVisibility.Hidden));
+                DriveName = group.Add(new VocabularyKey("DriveName", VocabularyKeyDataType.Text, VocabularyKeyVisibility.Hidden));
             });
         }
 

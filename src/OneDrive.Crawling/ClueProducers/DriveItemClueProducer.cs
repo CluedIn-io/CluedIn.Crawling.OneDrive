@@ -52,9 +52,11 @@ namespace CluedIn.Crawling.OneDrive.ClueProducers
                 {
                     data.Properties[OneDriveVocabularies.DriveItem.DriveName] = i.Drive.Name;
                     data.Properties[OneDriveVocabularies.DriveItem.DriveOwnerUserEmail] = i.Drive.Owner.User.AdditionalData["email"].ToString();
+                    data.Properties["saxo.file.author"] = i.Drive.Owner.User.AdditionalData["email"].ToString();
                 }
             }
             data.Properties[OneDriveVocabularies.DriveItem.Path] = input.ParentReference.Path + "/" + input.Name;
+            data.Properties["saxo.file.path"] = input.ParentReference.Path + "/" + input.Name;
 
             return clue;
         }
