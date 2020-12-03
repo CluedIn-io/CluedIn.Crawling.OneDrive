@@ -28,13 +28,15 @@ namespace CluedIn.Crawling.OneDrive
                 onedrivecrawlJobData.LastCrawlFinishTime = onedrivecrawlJobData.LastCrawlFinishTime.AddHours(-3);
 
             foreach (var user in client.GetUsers())
-            {
+            {          
+                //yield return new CluedInUser(user);
                 foreach (var drive in client.GetDrives(user))
                 {
+                    //yield return new CluedInDrive(drive);
                     foreach (var item in client.GetDriveItems(drive))
                     {
                         if (item.CreatedDateTime > onedrivecrawlJobData.LastCrawlFinishTime || item.LastModifiedDateTime > onedrivecrawlJobData.LastCrawlFinishTime)
-                            yield return new CluedInDriveItem(item);
+                            yield return new CluedInDriveItem(item, drive);
                     }
                 }
             }

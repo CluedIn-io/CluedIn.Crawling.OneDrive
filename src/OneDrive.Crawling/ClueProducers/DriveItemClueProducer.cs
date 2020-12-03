@@ -5,6 +5,7 @@ using CluedIn.Core.Data;
 using CluedIn.Crawling.Factories;
 using CluedIn.Crawling.OneDrive.Core;
 using CluedIn.Crawling.OneDrive.Core.Models;
+using CluedIn.Crawling.OneDrive.Vocabularies;
 
 namespace CluedIn.Crawling.OneDrive.ClueProducers
 {
@@ -26,7 +27,7 @@ namespace CluedIn.Crawling.OneDrive.ClueProducers
             var input = i.DriveItem;
             var clue = factory.Create(EntityType.Infrastructure.DirectoryItem, input.Id, accountId);
             var data = clue.Data.EntityData;
-        
+
             if (input.File != null)
             {
                 if (input.AdditionalData.ContainsKey("@microsoft.graph.downloadUrl"))
@@ -35,7 +36,7 @@ namespace CluedIn.Crawling.OneDrive.ClueProducers
                 }
             }
 
-            PopulateBasicProperties(clue, i);
+            BaseItemHelper.PopulateBaseItemClue(clue, input, factory, OneDrive.Vocabularies.OneDriveVocabularies.DriveItem);
             if (input.ODataType != null)
             {
 
@@ -44,6 +45,16 @@ namespace CluedIn.Crawling.OneDrive.ClueProducers
             {
 
             }
+
+            if (i.Drive != null)
+            {
+                if (i.Drive.Owner.User.AdditionalData.ContainsKey("email"))
+                {
+                    data.Properties[OneDriveVocabularies.DriveItem.DriveName] = i.Drive.Name;
+                    data.Properties[OneDriveVocabularies.DriveItem.DriveOwnerUserEmail] = i.Drive.Owner.User.AdditionalData["email"].ToString();
+                }
+            }
+            data.Properties[OneDriveVocabularies.DriveItem.Path] = input.ParentReference.Path + "/" + input.Name;
 
             return clue;
         }
