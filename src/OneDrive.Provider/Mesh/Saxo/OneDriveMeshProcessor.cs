@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using System.Net;
 using CluedIn.Core;
 using CluedIn.Core.Data;
 using CluedIn.Core.Mesh;
@@ -12,7 +12,6 @@ using CluedIn.Crawling.OneDrive.Infrastructure.Factories;
 using CluedIn.Crawling.OneDrive.Vocabularies;
 using CluedIn.SaxoBank.Common;
 using Microsoft.Graph;
-using Newtonsoft.Json;
 
 namespace CluedIn.Providers.Mesh
 {
@@ -33,7 +32,7 @@ namespace CluedIn.Providers.Mesh
 
         public override string GetLookupId(IEntity entity)
         {
-            return entity.Properties[OneDriveVocabularies.DriveItem.Id];
+            return string.Join(",", new[] { entity.Properties[OneDriveVocabularies.DriveItem.Id], entity.Properties[OneDriveVocabularies.DriveItem.DriveOwnerUserId] });
         }
 
         public override string GetVocabularyProviderKey() =>
@@ -43,65 +42,44 @@ namespace CluedIn.Providers.Mesh
         {
             var client = onedriveClientFactory.CreateNew(new OneDriveCrawlJobData(config));
             graphClient = client.graphClient;
-            Drive drive = null;
-            DriveItem item = null;
-            foreach (var user in client.GetUsers())
-                foreach (var d in client.GetDrives(user))
-                    foreach (var driveItem in client.GetDriveItems(d))
+            try
+            {
+                var values = id.Split(',');
+                var itemId = values[0];
+                var userId = values[1];
+
+                DriveItem item = graphClient.Users[userId].Drive.Items[itemId].Request().GetAsync().Result;
+                var drive = graphClient.Users[userId].Drives[item.ParentReference.DriveId].Request().GetAsync().Result;
+
+                if (item != null)
+                {
+                    var stream = graphClient.Users[userId].Drive.Items[itemId].Content.Request().GetAsync().Result;
+                    var extension = item.Name.Split('.').LastOrDefault();
+                    var redacted = Replace(stream, extension, properties.properties);
+                    if (item.Size < 4000000)
                     {
-                        if (driveItem.Id == id)
-                            item = driveItem;
-                        drive = d;
+                        var result = client.ReplaceFile(drive, item, redacted);
+                        if (result != null)
+                            return new List<QueryResponse>() { new QueryResponse() { Content = null, StatusCode = HttpStatusCode.OK } };
                     }
-                 
-
-            if (item != null)
-            {
-                var stream = graphClient.Drive.Items[id].Content.Request().GetAsync().Result;
-                var extension = item.Name.Split('.').LastOrDefault();
-                var redacted = Replace(stream, extension, properties.properties);
-                if (item.Size < 4000000)
-                {
-                    var result = client.ReplaceFile(drive, item, redacted);
-                    if (result != null)
-                        return new List<QueryResponse>()
+                    else
                     {
-                        new QueryResponse() { Content = null, StatusCode = System.Net.HttpStatusCode.OK }
-    };
+                        var result = client.ReplaceLargeFile(drive, item, redacted);
+                        if (result.UploadSucceeded)
+                            return new List<QueryResponse>() { new QueryResponse() { Content = null, StatusCode = HttpStatusCode.OK } };
+                    }
                 }
-                else
-                {
-                    var result = client.ReplaceLargeFile(drive, item, redacted);
-                    if (result.UploadSucceeded)
-                        return new List<QueryResponse>()
-                    {
-                        new QueryResponse() { Content = null, StatusCode = System.Net.HttpStatusCode.OK }
-    };
-
-                }
-
             }
-
-            return new List<QueryResponse>()
+            catch (Exception ex)
             {
-                new QueryResponse() { Content = null, StatusCode = System.Net.HttpStatusCode.InternalServerError }
-};
+                this.AppContext.Container.GetLogger().Error(() => ex.Message, ex);
+            }
+            return new List<QueryResponse>() { new QueryResponse() { Content = null, StatusCode = HttpStatusCode.InternalServerError } };
         }
 
         public override List<QueryResponse> Validate(ExecutionContext context, MeshDataCommand command, IDictionary<string, object> config, string id, MeshQuery query)
         {
-            var item = ActionExtensions.ExecuteWithRetry(() => { return graphClient.Drive.Items[id].Request().GetAsync().Result; });
-
-            if (item == null)
-                return new List<QueryResponse>() { new QueryResponse() { Content = null, StatusCode = System.Net.HttpStatusCode.InternalServerError } };
-
-            //TODO search file content
-
-            return new List<QueryResponse>()
-            {
-                new QueryResponse() { Content = JsonConvert.SerializeObject(item), StatusCode = System.Net.HttpStatusCode.OK }
-            };
-
+            return new List<QueryResponse>();
         }
 
         public override void DoProcess(ExecutionContext context, MeshDataCommand command, IDictionary<string, object> jobData, MeshQuery query)

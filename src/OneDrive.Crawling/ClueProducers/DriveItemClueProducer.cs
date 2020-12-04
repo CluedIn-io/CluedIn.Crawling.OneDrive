@@ -48,15 +48,26 @@ namespace CluedIn.Crawling.OneDrive.ClueProducers
 
             if (i.Drive != null)
             {
+                data.Properties[OneDriveVocabularies.DriveItem.DriveName] = i.Drive.Name;
+                if (i.Drive.Owner != null)
+                {
+                    if (i.Drive.Owner.User != null)
+                        data.Properties[OneDriveVocabularies.DriveItem.DriveOwnerUserId] = i.Drive.Owner.User.Id;
+                }
                 if (i.Drive.Owner.User.AdditionalData.ContainsKey("email"))
                 {
-                    data.Properties[OneDriveVocabularies.DriveItem.DriveName] = i.Drive.Name;
                     data.Properties[OneDriveVocabularies.DriveItem.DriveOwnerUserEmail] = i.Drive.Owner.User.AdditionalData["email"].ToString();
                     data.Properties["saxo.file.author"] = i.Drive.Owner.User.AdditionalData["email"].ToString();
                 }
             }
-            data.Properties[OneDriveVocabularies.DriveItem.Path] = input.ParentReference.Path + "/" + input.Name;
-            data.Properties["saxo.file.path"] = input.ParentReference.Path + "/" + input.Name;
+            if (input.ParentReference != null)
+            {
+                if (!string.IsNullOrWhiteSpace(input.ParentReference.Path))
+                {
+                    data.Properties[OneDriveVocabularies.DriveItem.Path] = input.ParentReference.Path + "/" + input.Name;
+                    data.Properties["saxo.file.path"] = input.ParentReference.Path + "/" + input.Name;
+                }
+            }
 
             return clue;
         }
