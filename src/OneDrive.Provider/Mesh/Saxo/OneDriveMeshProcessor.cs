@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using CluedIn.Core;
@@ -54,20 +55,30 @@ namespace CluedIn.Providers.Mesh
                 if (item != null)
                 {
                     var stream = graphClient.Users[userId].Drive.Items[itemId].Content.Request().GetAsync().Result;
-                    var extension = item.Name.Split('.').LastOrDefault();
-                    var redacted = Replace(stream, extension, properties.properties);
-                    if (item.Size < 4000000)
+
+                    using (var temporaryStream = new MemoryStream())
                     {
-                        var result = client.ReplaceFile(drive, item, redacted);
-                        if (result != null)
-                            return new List<QueryResponse>() { new QueryResponse() { Content = null, StatusCode = HttpStatusCode.OK } };
+                        stream.CopyTo(temporaryStream);
+                        var extension = item.Name.Split('.').LastOrDefault();
+                        using (var redacted = Replace(temporaryStream, extension, properties.properties))
+                        {
+                            redacted.Position = 0;
+                            if (item.Size < 4000000)
+                            {
+                                var result = client.ReplaceFile(drive, item, redacted);
+                                if (result != null)
+                                    return new List<QueryResponse>() { new QueryResponse() { Content = null, StatusCode = HttpStatusCode.OK } };
+                            }
+                            else
+                            {
+                                var result = client.ReplaceLargeFile(drive, item, redacted);
+                                if (result.UploadSucceeded)
+                                    return new List<QueryResponse>() { new QueryResponse() { Content = null, StatusCode = HttpStatusCode.OK } };
+                            }
+                        }
+                        
                     }
-                    else
-                    {
-                        var result = client.ReplaceLargeFile(drive, item, redacted);
-                        if (result.UploadSucceeded)
-                            return new List<QueryResponse>() { new QueryResponse() { Content = null, StatusCode = HttpStatusCode.OK } };
-                    }
+                    
                 }
             }
             catch (Exception ex)
