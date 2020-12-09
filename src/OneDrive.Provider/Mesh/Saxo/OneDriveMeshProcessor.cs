@@ -76,9 +76,9 @@ namespace CluedIn.Providers.Mesh
                                     return new List<QueryResponse>() { new QueryResponse() { Content = null, StatusCode = HttpStatusCode.OK } };
                             }
                         }
-                        
+
                     }
-                    
+
                 }
             }
             catch (Exception ex)
@@ -100,7 +100,10 @@ namespace CluedIn.Providers.Mesh
 
         public override List<RawQuery> GetRawQueries(IDictionary<string, object> config, IEntity entity, Core.Mesh.Properties properties)
         {
-            return new List<RawQuery>();
+            return new List<RawQuery>()
+            {
+                new RawQuery(){ Query = $"Redaction query for {entity.Uri} (ItemId {entity.Codes.FirstOrDefault().Value}) with transforms {JsonUtility.Serialize(properties)}"}
+            };
         }
     }
 }

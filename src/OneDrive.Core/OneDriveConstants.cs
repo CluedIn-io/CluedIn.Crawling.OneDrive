@@ -29,32 +29,30 @@ namespace CluedIn.Crawling.OneDrive.Core
         public const string Details = "";
         public static AuthMethods AuthMethods = new AuthMethods()
         {
+            /*oauth = new OAuth()
+            {
+                initial = "",
+                callback = ""
+            },*/
             credentials = new Control[]
             {
                 new Control()
                 {
-                    displayName = KeyName.TargetUrl,
-                    isRequired = false,
-                    name = KeyName.TargetUrl,
-                    type = "text"
-                },
-                new Control()
-                {
-                    displayName = KeyName.Tenant,
+                    displayName = "If the tenant ID has not already been configured, you can add it here.",
                     isRequired = false,
                     name = KeyName.Tenant,
                     type = "text"
                 },
                 new Control()
                 {
-                    displayName = KeyName.ClientID,
+                    displayName = "If the client ID has not already been configured, you can add it here.",
                     isRequired = false,
                     name = KeyName.ClientID,
                     type = "text"
                 },
                 new Control()
                 {
-                    displayName = KeyName.ClientSecret,
+                    displayName = "If the client secret has not already been configured, you can add it here.",
                     isRequired = false,
                     name = KeyName.ClientSecret,
                     type = "password"
@@ -89,9 +87,8 @@ namespace CluedIn.Crawling.OneDrive.Core
         {
             Features = new Dictionary<string, string>
             {
-                                       { "Tracking",        "Expenses and Invoices against customers" },
-                                       { "Intelligence",    "Aggregate types of invoices and expenses against customers and companies." }
-                                   },
+
+            },
             Icon = ProviderIconFactory.CreateUri(ProviderId),
             ProviderName = ProviderName,
             ProviderId = ProviderId,
