@@ -28,6 +28,9 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Aspose.Cells" Version="20.1.0" />
+    <PackageReference Include="Aspose.Slides.NET" Version="20.1.0" />
+    <PackageReference Include="Aspose.Words" Version="20.1.0" />
     <PackageReference Include="CluedIn.Core" Version="2.4.0" />
     <PackageReference Include="CluedIn.Crawling" Version="2.4.0" />
     <PackageReference Include="CluedIn.SaxoBank.Common" Version="0.1.0-alpha0073" />

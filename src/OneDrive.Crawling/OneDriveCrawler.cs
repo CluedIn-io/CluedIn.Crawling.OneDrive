@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using CluedIn.Core.Crawling;
 using CluedIn.Crawling.OneDrive.Core;
@@ -28,7 +29,7 @@ namespace CluedIn.Crawling.OneDrive
                 onedrivecrawlJobData.LastCrawlFinishTime = onedrivecrawlJobData.LastCrawlFinishTime.AddHours(-3);
 
             foreach (var user in client.GetUsers())
-            {          
+            {
                 //yield return new CluedInUser(user);
                 foreach (var drive in client.GetDrives(user))
                 {
@@ -36,7 +37,17 @@ namespace CluedIn.Crawling.OneDrive
                     foreach (var item in client.GetDriveItems(drive))
                     {
                         if (item.CreatedDateTime > onedrivecrawlJobData.LastCrawlFinishTime || item.LastModifiedDateTime > onedrivecrawlJobData.LastCrawlFinishTime)
-                            yield return new CluedInDriveItem(item, drive);
+                        {
+                            var supported = Enum.GetValues(typeof(Aspose.Words.SaveFormat)).Cast<Aspose.Words.SaveFormat>().Select(i => i.ToString())
+                                .Concat(Enum.GetValues(typeof(Aspose.Cells.SaveFormat)).Cast<Aspose.Cells.SaveFormat>().Select(i => i.ToString()))
+                                .Concat(Enum.GetValues(typeof(Aspose.Slides.Export.SaveFormat)).Cast<Aspose.Slides.Export.SaveFormat>().Select(i => i.ToString()));
+                            var extension = item.Name.Split('.').LastOrDefault();
+                            if (extension != null && supported.Any(sup => sup.ToLowerInvariant() == extension.ToLowerInvariant()))
+                            {
+                                if (item.File != null)
+                                    yield return new CluedInDriveItem(item, drive);
+                            }
+                        }
                     }
                 }
             }
