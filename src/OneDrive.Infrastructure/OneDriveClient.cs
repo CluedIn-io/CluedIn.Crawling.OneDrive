@@ -32,7 +32,7 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
             var confidentialClientApplication = ConfidentialClientApplicationBuilder
                    .Create(onedriveCrawlJobData.ClientID)
                    .WithAuthority($"https://login.microsoftonline.com/{onedriveCrawlJobData.Tenant}/v2.0")
-                   .WithClientSecret(onedriveCrawlJobData.ClientSecret)
+                   .WithClientSecret(Environment.GetEnvironmentVariable(onedriveCrawlJobData.ClientSecret, EnvironmentVariableTarget.Machine))
                    .Build();
 
             graphClient =
