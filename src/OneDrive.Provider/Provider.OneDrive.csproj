@@ -37,7 +37,7 @@
     <PackageReference Include="CluedIn.Core" Version="2.4.0" />
     <PackageReference Include="CluedIn.Core.Agent" Version="2.4.0" />
     <PackageReference Include="CluedIn.Crawling" Version="2.4.0" />
-    <PackageReference Include="CluedIn.SaxoBank.Common" Version="0.1.0-alpha0073" />
+    <PackageReference Include="CluedIn.SaxoBank.Common" Version="0.1.0-alpha0080" />
     <PackageReference Include="CluedIn.Server" Version="2.4.0" />
     <PackageReference Include="CluedIn.Server.Common.WebApi" Version="2.4.0" />
     <PackageReference Include="ComponentHost" Version="1.0.0.46" />

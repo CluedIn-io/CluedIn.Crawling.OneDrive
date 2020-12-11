@@ -5,6 +5,7 @@ using CluedIn.Core.Crawling;
 using CluedIn.Crawling.OneDrive.Core;
 using CluedIn.Crawling.OneDrive.Core.Models;
 using CluedIn.Crawling.OneDrive.Infrastructure.Factories;
+using CluedIn.SaxoBank.Common;
 
 namespace CluedIn.Crawling.OneDrive
 {
@@ -38,11 +39,8 @@ namespace CluedIn.Crawling.OneDrive
                     {
                         if (item.CreatedDateTime > onedrivecrawlJobData.LastCrawlFinishTime || item.LastModifiedDateTime > onedrivecrawlJobData.LastCrawlFinishTime)
                         {
-                            var supported = Enum.GetValues(typeof(Aspose.Words.SaveFormat)).Cast<Aspose.Words.SaveFormat>().Select(i => i.ToString())
-                                .Concat(Enum.GetValues(typeof(Aspose.Cells.SaveFormat)).Cast<Aspose.Cells.SaveFormat>().Select(i => i.ToString()))
-                                .Concat(Enum.GetValues(typeof(Aspose.Slides.Export.SaveFormat)).Cast<Aspose.Slides.Export.SaveFormat>().Select(i => i.ToString()));
-                            var extension = item.Name.Split('.').LastOrDefault();
-                            if (extension != null && supported.Any(sup => sup.ToLowerInvariant() == extension.ToLowerInvariant()))
+                            var extension = "." + item.Name.Split('.').LastOrDefault();
+                            if (extension != null && SaxoBankCommonConstants.Extensions.Any(sup => sup.ToLowerInvariant() == extension.ToLowerInvariant()))
                             {
                                 if (item.File != null)
                                     yield return new CluedInDriveItem(item, drive);
