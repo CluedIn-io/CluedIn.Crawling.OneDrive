@@ -56,36 +56,44 @@ namespace CluedIn.Providers.Mesh
                 {
                     var stream = graphClient.Users[userId].Drive.Items[itemId].Content.Request().GetAsync().Result;
 
-                    using (var temporaryStream = new MemoryStream())
+                    var temporaryStream = new MemoryStream();
+                    
+                    stream.CopyTo(temporaryStream);
+                    stream.Position = 0;
+
+                    temporaryStream.Position = 0;
+
+                    var extension = "";
+                    var index = item.Name.LastIndexOf('.');
+                    if (index >= 0)
+                        extension = item.Name.Substring(index);
+
+                    var redacted = Replace(temporaryStream, extension, properties.properties);
+
+                    if (redacted == null || redacted.Length == 0)
+                        return new List<QueryResponse>() { new QueryResponse() { Content = "Replaced stream is empty", StatusCode = HttpStatusCode.InternalServerError } };
+
+                    redacted.Position = 0;
+
+                    if (item.Size < 4000000)
                     {
-                        stream.CopyTo(temporaryStream);
-                        var extension = item.Name.Split('.').LastOrDefault();
-                        using (var redacted = Replace(temporaryStream, extension, properties.properties))
-                        {
-                            redacted.Position = 0;
-                            if (item.Size < 4000000)
-                            {
-                                var result = client.ReplaceFile(drive, item, redacted);
-                                if (result != null)
-                                    return new List<QueryResponse>() { new QueryResponse() { Content = null, StatusCode = HttpStatusCode.OK } };
-                            }
-                            else
-                            {
-                                var result = client.ReplaceLargeFile(drive, item, redacted);
-                                if (result.UploadSucceeded)
-                                    return new List<QueryResponse>() { new QueryResponse() { Content = null, StatusCode = HttpStatusCode.OK } };
-                            }
-                        }
-
+                        var result = client.ReplaceFile(drive, item, redacted);
+                        if (result != null)
+                            return new List<QueryResponse>() { new QueryResponse() { Content = $"Redacted {id}", StatusCode = HttpStatusCode.OK } };
                     }
-
+                    else
+                    {
+                        var result = client.ReplaceLargeFile(drive, item, redacted);
+                        if (result.UploadSucceeded)
+                            return new List<QueryResponse>() { new QueryResponse() { Content = $"Redacted {id}", StatusCode = HttpStatusCode.OK } };
+                    }
                 }
             }
             catch (Exception ex)
             {
-                this.AppContext.Container.GetLogger().Error(() => ex.Message, ex);
+                this.AppContext.Container.GetLogger().Error(() => $"OD MESH Exception. ID {id}. Message: {ex.Message}", ex);
             }
-            return new List<QueryResponse>() { new QueryResponse() { Content = null, StatusCode = HttpStatusCode.InternalServerError } };
+            return new List<QueryResponse>() { new QueryResponse() { Content = $"OD MESH Fail: ID: {id};", StatusCode = HttpStatusCode.InternalServerError } };
         }
 
         public override List<QueryResponse> Validate(ExecutionContext context, MeshDataCommand command, IDictionary<string, object> config, string id, MeshQuery query)

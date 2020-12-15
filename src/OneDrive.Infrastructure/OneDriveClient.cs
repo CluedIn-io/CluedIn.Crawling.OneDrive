@@ -29,6 +29,11 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
             this.log = log ?? throw new ArgumentNullException(nameof(log));
             this.onedriveCrawlJobData = onedriveCrawlJobData ?? throw new ArgumentNullException(nameof(onedriveCrawlJobData));
 
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+
+            if (onedriveCrawlJobData.UseProxy)
+                WebRequest.DefaultWebProxy = new System.Net.WebProxy("dk.proxy.mid.dom");
+
             var confidentialClientApplication = ConfidentialClientApplicationBuilder
                    .Create(onedriveCrawlJobData.ClientID)
                    .WithAuthority($"https://login.microsoftonline.com/{onedriveCrawlJobData.Tenant}/v2.0")
@@ -131,6 +136,7 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
             DriveItem result = null;
             result = ActionExtensions.ExecuteWithRetry(() =>
             {
+                stream.Seek(0, SeekOrigin.Begin);
                 return graphClient.Drives[drive.Id].Items[item.Id].Content.Request().PutAsync<DriveItem>(stream).Result;
             });
 

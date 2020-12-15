@@ -111,7 +111,7 @@ namespace CluedIn.Provider.OneDrive
         public override string Schedule(DateTimeOffset relativeDateTime, bool webHooksEnabled)
         {
             return webHooksEnabled && ConfigurationManager.AppSettings.GetFlag("Feature.Webhooks.Enabled", false) ? $"{relativeDateTime.Minute} 0/23 * * *"
-                : $"{relativeDateTime.Minute} 0/4 * * *";
+                : $"{relativeDateTime.Minute} 0/24 * * *";
         }
 
         public override Task<IEnumerable<WebHookSignature>> CreateWebHook(ExecutionContext context, [NotNull] CrawlJobData jobData, [NotNull] IWebhookDefinition webhookDefinition, [NotNull] IDictionary<string, object> config)

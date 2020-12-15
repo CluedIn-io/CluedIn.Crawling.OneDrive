@@ -19,6 +19,7 @@ namespace CluedIn.Crawling.OneDrive.Core
             Tenant = configuration.GetValue(OneDriveConstants.KeyName.Tenant, ConfigurationManager.AppSettings.GetValue(OneDriveConstants.KeyName.Tenant, default(string)));
             ClientID = configuration.GetValue(OneDriveConstants.KeyName.ClientID, ConfigurationManager.AppSettings.GetValue(OneDriveConstants.KeyName.ClientID, default(string)));
             ClientSecret = configuration.GetValue(OneDriveConstants.KeyName.ClientSecret, ConfigurationManager.AppSettings.GetValue(OneDriveConstants.KeyName.ClientSecret, default(string)));
+            UseProxy = GetValue<bool>(configuration, OneDriveConstants.KeyName.UseProxy);
         }
 
         public string ApiKey { get; set; }
@@ -30,5 +31,6 @@ namespace CluedIn.Crawling.OneDrive.Core
         public string ClientID { get; set; }
 
         public string ClientSecret { get; set; }
+        public bool UseProxy { get; set; }
     }
 }
