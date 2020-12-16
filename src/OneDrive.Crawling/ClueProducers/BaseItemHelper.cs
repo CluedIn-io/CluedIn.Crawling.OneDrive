@@ -19,53 +19,53 @@ namespace CluedIn.Crawling.OneDrive.ClueProducers
             data.ModifiedDate = input.LastModifiedDateTime;
             data.Uri = new Uri(input.WebUrl);
 
-            if (input.ParentReference != null)
-            {
-                if (!string.IsNullOrWhiteSpace(input.ParentReference.Id))
-                    factory.CreateOutgoingEntityReference(clue, EntityType.Infrastructure.DirectoryItem, EntityEdgeType.Parent, input, input.ParentReference.Id);
-            }
+            //if (input.ParentReference != null)
+            //{
+            //    if (!string.IsNullOrWhiteSpace(input.ParentReference.Id))
+            //        factory.CreateOutgoingEntityReference(clue, EntityType.Infrastructure.DirectoryItem, EntityEdgeType.Parent, input, input.ParentReference.Id);
+            //}
 
-            if (input.CreatedByUser != null)
-            {
-                if (!string.IsNullOrWhiteSpace(input.CreatedByUser.Id))
-                    factory.CreateOutgoingEntityReference(clue, EntityType.Infrastructure.User, EntityEdgeType.CreatedBy, input, input.CreatedByUser.Id);
-            }
+            //if (input.CreatedByUser != null)
+            //{
+            //    if (!string.IsNullOrWhiteSpace(input.CreatedByUser.Id))
+            //        factory.CreateOutgoingEntityReference(clue, EntityType.Infrastructure.User, EntityEdgeType.CreatedBy, input, input.CreatedByUser.Id);
+            //}
 
-            if (input.LastModifiedByUser != null)
-            {
-                if (!string.IsNullOrWhiteSpace(input.LastModifiedByUser.Id))
-                    factory.CreateOutgoingEntityReference(clue, EntityType.Infrastructure.User, EntityEdgeType.ModifiedBy, input, input.LastModifiedByUser.Id);
-            }
+            //if (input.LastModifiedByUser != null)
+            //{
+            //    if (!string.IsNullOrWhiteSpace(input.LastModifiedByUser.Id))
+            //        factory.CreateOutgoingEntityReference(clue, EntityType.Infrastructure.User, EntityEdgeType.ModifiedBy, input, input.LastModifiedByUser.Id);
+            //}
 
-            if (input.CreatedBy != null)
-            {
-                if (input.CreatedBy.User != null)
-                    if (!string.IsNullOrWhiteSpace(input.CreatedBy.User.Id))
-                        factory.CreateOutgoingEntityReference(clue, EntityType.Infrastructure.User, EntityEdgeType.CreatedBy, input, input.CreatedBy.User.Id);
+            //if (input.CreatedBy != null)
+            //{
+            //    if (input.CreatedBy.User != null)
+            //        if (!string.IsNullOrWhiteSpace(input.CreatedBy.User.Id))
+            //            factory.CreateOutgoingEntityReference(clue, EntityType.Infrastructure.User, EntityEdgeType.CreatedBy, input, input.CreatedBy.User.Id);
 
-                if (input.CreatedBy.Application != null)
-                    if (!string.IsNullOrWhiteSpace(input.CreatedBy.Application.Id))
-                        factory.CreateOutgoingEntityReference(clue, EntityType.Infrastructure.Application, EntityEdgeType.CreatedBy, input, input.CreatedBy.Application.Id);
+            //    if (input.CreatedBy.Application != null)
+            //        if (!string.IsNullOrWhiteSpace(input.CreatedBy.Application.Id))
+            //            factory.CreateOutgoingEntityReference(clue, EntityType.Infrastructure.Application, EntityEdgeType.CreatedBy, input, input.CreatedBy.Application.Id);
 
-                if (input.CreatedBy.Device != null)
-                    if (!string.IsNullOrWhiteSpace(input.CreatedBy.Device.Id))
-                        factory.CreateOutgoingEntityReference(clue, EntityType.Infrastructure, EntityEdgeType.CreatedBy, input, input.CreatedBy.Device.Id);
-            }
+            //    if (input.CreatedBy.Device != null)
+            //        if (!string.IsNullOrWhiteSpace(input.CreatedBy.Device.Id))
+            //            factory.CreateOutgoingEntityReference(clue, EntityType.Infrastructure, EntityEdgeType.CreatedBy, input, input.CreatedBy.Device.Id);
+            //}
 
-            if (input.LastModifiedBy != null)
-            {
-                if (input.LastModifiedBy.User != null)
-                    if (!string.IsNullOrWhiteSpace(input.LastModifiedBy.User.Id))
-                        factory.CreateOutgoingEntityReference(clue, EntityType.Infrastructure.User, EntityEdgeType.ModifiedBy, input, input.LastModifiedBy.User.Id);
+            //if (input.LastModifiedBy != null)
+            //{
+            //    if (input.LastModifiedBy.User != null)
+            //        if (!string.IsNullOrWhiteSpace(input.LastModifiedBy.User.Id))
+            //            factory.CreateOutgoingEntityReference(clue, EntityType.Infrastructure.User, EntityEdgeType.ModifiedBy, input, input.LastModifiedBy.User.Id);
 
-                if (input.LastModifiedBy.Application != null)
-                    if (!string.IsNullOrWhiteSpace(input.LastModifiedBy.Application.Id))
-                        factory.CreateOutgoingEntityReference(clue, EntityType.Infrastructure.Application, EntityEdgeType.ModifiedBy, input, input.LastModifiedBy.Application.Id);
+            //    if (input.LastModifiedBy.Application != null)
+            //        if (!string.IsNullOrWhiteSpace(input.LastModifiedBy.Application.Id))
+            //            factory.CreateOutgoingEntityReference(clue, EntityType.Infrastructure.Application, EntityEdgeType.ModifiedBy, input, input.LastModifiedBy.Application.Id);
 
-                if (input.LastModifiedBy.Device != null)
-                    if (!string.IsNullOrWhiteSpace(input.LastModifiedBy.Device.Id))
-                        factory.CreateOutgoingEntityReference(clue, EntityType.Infrastructure, EntityEdgeType.ModifiedBy, input, input.LastModifiedBy.Device.Id);
-            }
+            //    if (input.LastModifiedBy.Device != null)
+            //        if (!string.IsNullOrWhiteSpace(input.LastModifiedBy.Device.Id))
+            //            factory.CreateOutgoingEntityReference(clue, EntityType.Infrastructure, EntityEdgeType.ModifiedBy, input, input.LastModifiedBy.Device.Id);
+            //}
 
 
             data.Properties[vocabulary.Id] = input.Id.PrintIfAvailable();
