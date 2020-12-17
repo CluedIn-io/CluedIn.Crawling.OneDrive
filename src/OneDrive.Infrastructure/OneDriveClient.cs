@@ -32,7 +32,7 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
 
             if (onedriveCrawlJobData.UseProxy)
-                WebRequest.DefaultWebProxy = new System.Net.WebProxy("dk.proxy.mid.dom");
+                WebRequest.DefaultWebProxy = new System.Net.WebProxy(Environment.GetEnvironmentVariable("PROXY_URL", EnvironmentVariableTarget.Machine), true);
 
             var confidentialClientApplication = ConfidentialClientApplicationBuilder
                    .Create(onedriveCrawlJobData.ClientID)
