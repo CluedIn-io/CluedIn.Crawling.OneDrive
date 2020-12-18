@@ -131,22 +131,31 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
                 return new AccountInformation(onedriveCrawlJobData.ClientID, onedriveCrawlJobData.ClientID);
         }
 
-        public DriveItem ReplaceFile(Drive drive, DriveItem item, Stream stream)
+        public DriveItem ReplaceFile(string userId, Drive drive, DriveItem item, Stream stream)
         {
+            var otherStream = new MemoryStream();
+            stream.CopyTo(otherStream);
+
             DriveItem result = null;
-            result = ActionExtensions.ExecuteWithRetry(() =>
+
+            try
             {
-                stream.Seek(0, SeekOrigin.Begin);
-                return graphClient.Drives[drive.Id].Items[item.Id].Content.Request().PutAsync<DriveItem>(stream).Result;
-            });
+                result = graphClient.Users[userId].Drive.Items[item.Id].Content.Request().PutAsync<DriveItem>(stream).Result;
+            }
+            catch (Exception ex)
+            {
+                log.Error(() => $"Could not replace file in OneDrive. {ex.Message}", ex);
+
+                result = graphClient.Drives[drive.Id].Items[item.Id].Content.Request().PutAsync<DriveItem>(otherStream).Result;
+            }
 
             return result;
         }
 
-        public UploadResult<DriveItem> ReplaceLargeFile(Drive drive, DriveItem item, Stream stream)
+        public UploadResult<DriveItem> ReplaceLargeFile(string userId, Drive drive, DriveItem item, Stream stream)
         {
             UploadResult<DriveItem> uploadResult = null;
-            using (var fileStream = (FileStream)stream)
+            using (var fileStream = stream)
             {
                 var uploadProps = new DriveItemUploadableProperties
                 {
@@ -157,16 +166,34 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
                     }
                 };
 
-                var uploadSession = graphClient
+                UploadSession uploadSession = null;
+
+                try
+                {
+                    uploadSession = graphClient
+                    .Users[userId]
+                    .Drive
+                    .Items[item.Id]
+                    .CreateUploadSession(uploadProps)
+                    .Request()
+                    .PostAsync().Result;
+                }
+                catch (Exception ex)
+                {
+                    log.Error(() => $"Could not create uploadSession. {ex.Message}", ex);
+
+                    uploadSession = graphClient
                     .Drives[drive.Id]
                     .Items[item.Id]
                     .CreateUploadSession(uploadProps)
                     .Request()
-                    .PostAsync();
+                    .PostAsync().Result;
+                }
+                
 
                 int maxSliceSize = 320 * 1024;
                 var fileUploadTask =
-                    new LargeFileUploadTask<DriveItem>(uploadSession.Result, fileStream, maxSliceSize);
+                    new LargeFileUploadTask<DriveItem>(uploadSession, fileStream, maxSliceSize);
 
                 IProgress<long> progress = new Progress<long>(slice =>
                 {
@@ -175,10 +202,7 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
 
                 try
                 {
-                    uploadResult = ActionExtensions.ExecuteWithRetry(() =>
-                    {
-                       return fileUploadTask.UploadAsync(progress).Result;
-                    });
+                    uploadResult = fileUploadTask.UploadAsync(progress).Result;
 
                     if (uploadResult.UploadSucceeded)
                     {
@@ -191,7 +215,7 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
                 }
                 catch (ServiceException ex)
                 {
-                    log.Error($"Error uploading: {ex.ToString()}");
+                    log.Error($"Error uploading: {ex}");
                 }
             }
             return uploadResult;

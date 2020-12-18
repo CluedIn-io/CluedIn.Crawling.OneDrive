@@ -33,7 +33,7 @@ namespace CluedIn.Providers.Mesh
 
         public override string GetLookupId(IEntity entity)
         {
-            return string.Join(",", new[] { entity.Properties[OneDriveVocabularies.DriveItem.Id], entity.Properties[OneDriveVocabularies.DriveItem.DriveOwnerUserId] });
+            return string.Join("|", new[] { entity.Properties[OneDriveVocabularies.DriveItem.Id], entity.Properties[OneDriveVocabularies.DriveItem.DriveOwnerUserId], entity.Properties["saxo.file.path"] });
         }
 
         public override string GetVocabularyProviderKey() =>
@@ -45,53 +45,114 @@ namespace CluedIn.Providers.Mesh
             graphClient = client.graphClient;
             try
             {
-                var values = id.Split(',');
+                var values = id.Split('|');
                 var itemId = values[0];
                 var userId = values[1];
+                string driveId = null;
 
-                DriveItem item = graphClient.Users[userId].Drive.Items[itemId].Request().GetAsync().Result;
-                var drive = graphClient.Users[userId].Drives[item.ParentReference.DriveId].Request().GetAsync().Result;
-
-                if (item != null)
+                try
                 {
-                    var stream = graphClient.Users[userId].Drive.Items[itemId].Content.Request().GetAsync().Result;
+                    driveId = values[2].Split('/')[2];
+                }
+                catch (Exception ex)
+                {
+                    this.AppContext.Container.GetLogger().Error(() => $"OD MESH Exception. Could not get drive id. ID {id}. Message: {ex.Message}", ex);
+                }
 
-                    var temporaryStream = new MemoryStream();
-                    
-                    stream.CopyTo(temporaryStream);
-                    stream.Position = 0;
+                Drive drive = null;
+                DriveItem item = null;
+                var useDriveId = false;
 
-                    temporaryStream.Position = 0;
-
-                    var extension = "";
-                    var index = item.Name.LastIndexOf('.');
-                    if (index >= 0)
-                        extension = item.Name.Substring(index);
-
-                    var redacted = Replace(temporaryStream, extension, properties.properties);
-
-                    if (redacted == null || redacted.Length == 0)
-                        return new List<QueryResponse>() { new QueryResponse() { Content = "Replaced stream is empty", StatusCode = HttpStatusCode.InternalServerError } };
-
-                    redacted.Position = 0;
-
-                    if (item.Size < 4000000)
+                if (!string.IsNullOrWhiteSpace(driveId))
+                {
+                    try
                     {
-                        var result = client.ReplaceFile(drive, item, redacted);
-                        if (result != null)
-                            return new List<QueryResponse>() { new QueryResponse() { Content = $"Redacted {id}", StatusCode = HttpStatusCode.OK } };
+                        drive = graphClient.Drives[driveId].Request().GetAsync().Result;
+                        item = graphClient.Drives[driveId].Items[itemId].Request().GetAsync().Result;
+                        useDriveId = true;
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        var result = client.ReplaceLargeFile(drive, item, redacted);
-                        if (result.UploadSucceeded)
-                            return new List<QueryResponse>() { new QueryResponse() { Content = $"Redacted {id}", StatusCode = HttpStatusCode.OK } };
+                        this.AppContext.Container.GetLogger().Error(() => $"OD MESH Exception. Could not get item by drive id. ID {id}. Message: {ex.Message}", ex);
                     }
                 }
+
+                try
+                {
+                    if (item == null)
+                        item = graphClient.Users[userId].Drive.Items[itemId].Request().GetAsync().Result;
+
+                    if (drive == null)
+                        drive = graphClient.Users[userId].Drives[item.ParentReference.DriveId].Request().GetAsync().Result;
+                }
+                catch (Exception ex)
+                {
+                    this.AppContext.Container.GetLogger().Error(() => $"OD MESH Exception. Could not get item by user id. ID {id}. Message: {ex.Message}", ex);
+                }
+
+
+                if (item == null || drive == null)
+                {
+                    this.AppContext.Container.GetLogger().Error(() => $"OD MESH Exception. Item or drive null. Ending MESH.");
+                    return new List<QueryResponse>() { new QueryResponse() { Content = "Item or drive null. Ending MESH.", StatusCode = HttpStatusCode.InternalServerError } };
+                }
+
+
+                Stream stream = null;
+
+                if (useDriveId)
+                {
+                    stream = graphClient.Drives[driveId].Items[itemId].Content.Request().GetAsync().Result;
+                }
+
+                if (!useDriveId || stream == null || stream.Length == 0)
+                {
+                    stream = graphClient.Users[userId].Drive.Items[itemId].Content.Request().GetAsync().Result;
+                }
+
+                if (stream == null || stream.Length == 0)
+                {
+                    this.AppContext.Container.GetLogger().Warn(() => $"OD MESH Exception. Stream is null. DriveID: {useDriveId}. ID {id}.");
+                    return new List<QueryResponse>() { new QueryResponse() { Content = "Stream is empty", StatusCode = HttpStatusCode.InternalServerError } };
+                }
+
+                var temporaryStream = new MemoryStream();
+
+                stream.CopyTo(temporaryStream);
+                stream.Position = 0;
+
+                temporaryStream.Position = 0;
+
+                var extension = "";
+                var index = item.Name.LastIndexOf('.');
+                if (index >= 0)
+                    extension = item.Name.Substring(index);
+
+                var redacted = Replace(temporaryStream, extension, properties.properties);
+
+                if (redacted == null || redacted.Length == 0)
+                    return new List<QueryResponse>() { new QueryResponse() { Content = "Replaced stream is empty", StatusCode = HttpStatusCode.InternalServerError } };
+
+                redacted.Position = 0;
+
+                if (item.Size < 4000000)
+                {
+                    var result = client.ReplaceFile(userId, drive, item, redacted);
+                    if (result != null)
+                        return new List<QueryResponse>() { new QueryResponse() { Content = $"Redacted {id}", StatusCode = HttpStatusCode.OK } };
+                }
+                else
+                {
+                    var result = client.ReplaceLargeFile(userId, drive, item, redacted);
+                    if (result.UploadSucceeded)
+                        return new List<QueryResponse>() { new QueryResponse() { Content = $"Redacted {id}", StatusCode = HttpStatusCode.OK } };
+                }
+
             }
             catch (Exception ex)
             {
                 this.AppContext.Container.GetLogger().Error(() => $"OD MESH Exception. ID {id}. Message: {ex.Message}", ex);
+                return new List<QueryResponse>() { new QueryResponse() { Content = $"OD MESH Fail: ID: {id}. Ex: {ex.Message};", StatusCode = HttpStatusCode.InternalServerError } };
             }
             return new List<QueryResponse>() { new QueryResponse() { Content = $"OD MESH Fail: ID: {id};", StatusCode = HttpStatusCode.InternalServerError } };
         }
