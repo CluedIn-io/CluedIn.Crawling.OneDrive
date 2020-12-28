@@ -2,10 +2,10 @@
 {
     public static class OneDriveVocabularies
     {
-        public static DriveItemVocabulary DriveItem => new DriveItemVocabulary();
+        public static DriveItemVocabulary DriveItem = new DriveItemVocabulary();
 
-        public static DriveVocabulary Drive => new DriveVocabulary();
+        public static DriveVocabulary Drive = new DriveVocabulary();
 
-        public static FileVocabulary File => new FileVocabulary();
+        public static FileVocabulary File = new FileVocabulary();
     }
 }
