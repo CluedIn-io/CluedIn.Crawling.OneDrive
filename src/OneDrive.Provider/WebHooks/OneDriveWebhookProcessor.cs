@@ -54,19 +54,8 @@ namespace CluedIn.Provider.OneDrive.WebHooks
 
                         var clues = new List<Clue>();
 
-                        IAgentJobProcessorArguments jobArgs = new DebugAgentJobProcessorArguments
-                        {
-                            TaskScheduler = TaskScheduler.Default,
-                            Job           = new AgentJob(Guid.NewGuid(), AgentJobPriority.Normal, "CluedIn" + OneDriveConstants.ProviderName, ProcessingRestriction.Any, null, null)
-                        };
 
-                        var processorState = new AgentJobProcessorState<OneDriveCrawlJobData>(jobArgs, AppContext)
-                        {
-                            JobData = crawlJobData,
-                            Status = new AgentJobStatus {Statistics = new AgentJobStatusStatistics()}
-                        };
-
-                        throw new NotImplementedException($"TODO: Implement this to populate '{clues.GetType()}' with '{processorState}'");
+                        throw new NotImplementedException($"TODO: Implement this to populate '{clues.GetType()}'");
                     }
                 }
             }

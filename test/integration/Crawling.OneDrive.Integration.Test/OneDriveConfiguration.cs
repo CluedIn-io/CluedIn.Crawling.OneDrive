@@ -12,14 +12,15 @@ namespace CluedIn.Crawling.OneDrive.Integration.Test
     {
         public static Dictionary<string, object> Create()
         {
-            StreamReader reader = File.OpenText(@"..\..\..\OneDriveConfiguration.xml");
-            XDocument doc = XDocument.Load(reader);
-            var configuration = doc.Descendants().ToDictionary(config => config.Name.LocalName, config => config.Value);
+            //StreamReader reader = File.OpenText(@"..\..\..\OneDriveConfiguration.xml");
+            //XDocument doc = XDocument.Load(reader);
+            //var configuration = doc.Descendants().ToDictionary(config => config.Name.LocalName, config => config.Value);
             return new Dictionary<string, object>
             {
-                { OneDriveConstants.KeyName.ClientID, configuration[OneDriveConstants.KeyName.ClientID] },
-                { OneDriveConstants.KeyName.ClientSecret,configuration[OneDriveConstants.KeyName.ClientSecret]},
-                { OneDriveConstants.KeyName.Tenant, configuration[OneDriveConstants.KeyName.Tenant] }
+                { OneDriveConstants.KeyName.ClientID, Environment.GetEnvironmentVariable("saxo_sharepoint_username", EnvironmentVariableTarget.Machine) },
+                { OneDriveConstants.KeyName.ClientSecret, "saxo_sharepoint_password" },
+                { OneDriveConstants.KeyName.Tenant, Environment.GetEnvironmentVariable("saxo_sharepoint_tenant", EnvironmentVariableTarget.Machine) },
+                { OneDriveConstants.KeyName.FullCrawl, true },
             };
         }
     }

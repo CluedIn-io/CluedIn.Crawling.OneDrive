@@ -18,7 +18,7 @@
     <ProjectReference Include="..\OneDrive.Core\Crawling.OneDrive.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="CluedIn.Core" Version="2.4.0" />
+    <PackageReference Include="CluedIn.Core" Version="2.5.7-beta0190" />
     <PackageReference Include="Microsoft.CSharp" Version="4.6.0" />
     <PackageReference Include="Microsoft.Graph" Version="1.21.0" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.23.0" />

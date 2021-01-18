@@ -1,11 +1,15 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
+using CluedIn.ContentExtraction.Aspose.ContentExtraction.AsposeExtractors;
 using CluedIn.Core;
 using CluedIn.Core.Data;
 using CluedIn.Core.FileTypes;
 using CluedIn.Core.IO;
+using CluedIn.Crawling.ContentExtraction;
+using CluedIn.Crawling.FileIndexing;
 using CluedIn.Crawling.OneDrive.Core;
 using CluedIn.Crawling.OneDrive.Core.Models;
 using CluedIn.Crawling.OneDrive.Vocabularies;
@@ -25,6 +29,22 @@ namespace CluedIn.Crawling.OneDrive.ClueProducers
             {
                 try
                 {
+                    this.state.Status.Ping();
+                    var settings = new FileIndexingSettings();
+
+                    settings.ExtractContents = true;
+                    settings.GenerateThumbnail = false;
+
+                    settings.ContentExtractionTimeout = 600;
+                    
+                    var contentExtractor = this.appContext.Container.ResolveAll<IContentExtractor>().FirstOrDefault(c => c is AsposeContentExtractor);
+
+                    if(contentExtractor != null)
+                    {
+                        settings.FilterContentExtractors = extractors => extractors.Where(e => e.Name != "Tika" && e.Name != "POI");
+                        settings.ShouldSkipMultipleExtractors = (extractor, results) => (extractor.Name == "Tika" || extractor.Name == "POI") ? false : true;
+                    }
+
                     using (var tempFile = new TemporaryFile(value.Name))
                     {
                         using (var webClient = new WebClient())
@@ -60,7 +80,9 @@ namespace CluedIn.Crawling.OneDrive.ClueProducers
                         //data.EntityData.DocumentMimeType = mimeType.Code;
                         data.EntityData.Properties[OneDriveVocabularies.File.Hash] = hash;
 
-                        FileCrawlingUtility.IndexFile(tempFile, clue.Data, clue, state, appContext);
+                        var indexingResults = FileCrawlingUtility.IndexFile(appContext, state, clue, tempFile, settings);
+
+
                     }
                 }
                 catch (Exception ex)

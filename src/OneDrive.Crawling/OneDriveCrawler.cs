@@ -26,8 +26,12 @@ namespace CluedIn.Crawling.OneDrive
 
             var client = clientFactory.CreateNew(onedrivecrawlJobData);
 
-            if (onedrivecrawlJobData.LastCrawlFinishTime != default(DateTimeOffset))
-                onedrivecrawlJobData.LastCrawlFinishTime = onedrivecrawlJobData.LastCrawlFinishTime.AddHours(-3);
+            if (!onedrivecrawlJobData.FullCrawl)
+            {
+                if (onedrivecrawlJobData.LastCrawlFinishTime != default(DateTimeOffset))
+                    onedrivecrawlJobData.LastCrawlFinishTime = onedrivecrawlJobData.LastCrawlFinishTime.AddHours(-3);
+            }
+            
 
             foreach (var user in client.GetUsers())
             {
@@ -37,7 +41,7 @@ namespace CluedIn.Crawling.OneDrive
                     //yield return new CluedInDrive(drive);
                     foreach (var item in client.GetDriveItems(drive))
                     {
-                        if (item.CreatedDateTime > onedrivecrawlJobData.LastCrawlFinishTime || item.LastModifiedDateTime > onedrivecrawlJobData.LastCrawlFinishTime)
+                        if ((item.CreatedDateTime > onedrivecrawlJobData.LastCrawlFinishTime || item.LastModifiedDateTime > onedrivecrawlJobData.LastCrawlFinishTime) || onedrivecrawlJobData.FullCrawl)
                         {
                             var extension = "." + item.Name.Split('.').LastOrDefault();
                             if (extension != null && SaxoBankCommonConstants.Extensions.Any(sup => sup.ToLowerInvariant() == extension.ToLowerInvariant()))

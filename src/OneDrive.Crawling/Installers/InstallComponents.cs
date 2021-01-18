@@ -2,6 +2,7 @@ using System;
 using Castle.MicroKernel.Registration;
 using Castle.MicroKernel.SubSystems.Configuration;
 using Castle.Windsor;
+using CluedIn.ContentExtraction.Aspose.Installers;
 using CluedIn.Core;
 
 namespace CluedIn.Crawling.OneDrive.Installers
@@ -14,6 +15,9 @@ namespace CluedIn.Crawling.OneDrive.Installers
             if (store == null) throw new ArgumentNullException(nameof(store));
 
             // TODO Add further dependencies to the container here ...
+
+            // Temporary register Aspose content extractor in container
+            container.Install(new AsposeContentExtractionInstaller());
         }
     }
 }
