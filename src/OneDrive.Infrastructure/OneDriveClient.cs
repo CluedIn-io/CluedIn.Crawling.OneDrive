@@ -136,17 +136,20 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
             var otherStream = new MemoryStream();
             stream.CopyTo(otherStream);
 
+            otherStream.Position = 0;
+            stream.Position = 0;
+
             DriveItem result = null;
 
             try
             {
-                result = graphClient.Users[userId].Drive.Items[item.Id].Content.Request().PutAsync<DriveItem>(stream).Result;
+                result = graphClient.Drives[drive.Id].Items[item.Id].Content.Request().PutAsync<DriveItem>(stream).Result;
             }
             catch (Exception ex)
             {
                 log.Error(() => $"Could not replace file in OneDrive. {ex.Message}", ex);
+                result = graphClient.Users[userId].Drive.Items[item.Id].Content.Request().PutAsync<DriveItem>(otherStream).Result;
 
-                result = graphClient.Drives[drive.Id].Items[item.Id].Content.Request().PutAsync<DriveItem>(otherStream).Result;
             }
 
             return result;

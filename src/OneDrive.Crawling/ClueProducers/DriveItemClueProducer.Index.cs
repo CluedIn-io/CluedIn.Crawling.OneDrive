@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 using CluedIn.ContentExtraction.Aspose.ContentExtraction.AsposeExtractors;
 using CluedIn.Core;
 using CluedIn.Core.Data;
@@ -35,7 +36,7 @@ namespace CluedIn.Crawling.OneDrive.ClueProducers
                     settings.ExtractContents = true;
                     settings.GenerateThumbnail = false;
 
-                    settings.ContentExtractionTimeout = 600;
+                    settings.ContentExtractionTimeout = 500;
                     
                     var contentExtractor = this.appContext.Container.ResolveAll<IContentExtractor>().FirstOrDefault(c => c is AsposeContentExtractor);
 
@@ -68,20 +69,21 @@ namespace CluedIn.Crawling.OneDrive.ClueProducers
                             file.Close();
                         }
 
-
-                        data.EntityData.Codes.Add(new EntityCode(EntityType.Files.File, OneDriveConstants.CodeOrigin, hash));
-
-                        //MimeType mimeType = tempFile.FileInfo.ToMimeType();
-
                         if (value.Name != null)
                             data.EntityData.DocumentFileName = value.Name;
 
                         data.EntityData.DocumentSize = tempFile.FileInfo.Length;
-                        //data.EntityData.DocumentMimeType = mimeType.Code;
                         data.EntityData.Properties[OneDriveVocabularies.File.Hash] = hash;
 
                         var indexingResults = FileCrawlingUtility.IndexFile(appContext, state, clue, tempFile, settings);
-
+                        if (indexingResults != null && indexingResults.IsContentExtractionSuccessful)
+                        {
+                            appContext.Container.GetLogger().Info(() => $"Indexed file from OneDrive. File: {value.Name}");
+                        }
+                        else
+                        {
+                            appContext.Container.GetLogger().Error(() => $"Could not index file from OneDrive. File: {value.Name}");
+                        }
 
                     }
                 }
