@@ -31,7 +31,6 @@ namespace CluedIn.Crawling.OneDrive
                 if (onedrivecrawlJobData.LastCrawlFinishTime != default(DateTimeOffset))
                     onedrivecrawlJobData.LastCrawlFinishTime = onedrivecrawlJobData.LastCrawlFinishTime.AddHours(-3);
             }
-            
 
             foreach (var user in client.GetUsers())
             {

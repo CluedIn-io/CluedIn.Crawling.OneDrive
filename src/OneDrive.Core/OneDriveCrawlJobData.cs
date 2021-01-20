@@ -20,7 +20,7 @@ namespace CluedIn.Crawling.OneDrive.Core
             ClientID = configuration.GetValue(OneDriveConstants.KeyName.ClientID, ConfigurationManager.AppSettings.GetValue(OneDriveConstants.KeyName.ClientID, default(string)));
             ClientSecret = configuration.GetValue(OneDriveConstants.KeyName.ClientSecret, ConfigurationManager.AppSettings.GetValue(OneDriveConstants.KeyName.ClientSecret, default(string)));
             UseProxy = GetValue<bool>(configuration, OneDriveConstants.KeyName.UseProxy);
-            FullCrawl = GetValue<bool>(configuration, OneDriveConstants.KeyName.UseProxy);
+            FullCrawl = GetValue<bool>(configuration, OneDriveConstants.KeyName.FullCrawl);
         }
 
         public string ApiKey { get; set; }

@@ -21,82 +21,86 @@ namespace CluedIn.Crawling.OneDrive.ClueProducers
     {
         private void Index([NotNull] CluedInDriveItem input, [NotNull] string webUrl, [NotNull] Clue clue)
         {
+            this.state.Status.Ping();
+
+
             var data = clue.Data;
             var value = input.DriveItem;
 
             string hash;
 
-            if (value.Size <= CluedIn.Core.Constants.MaxFileIndexingFileSize)
+            if (value.Size <= Constants.MaxFileIndexingFileSize && value.Size > 1)
             {
-                try
+                Task.Factory.StartNew(() =>
                 {
-                    this.state.Status.Ping();
-                    var settings = new FileIndexingSettings();
-
-                    settings.ExtractContents = true;
-                    settings.GenerateThumbnail = false;
-
-                    settings.ContentExtractionTimeout = 500;
-                    
-                    var contentExtractor = this.appContext.Container.ResolveAll<IContentExtractor>().FirstOrDefault(c => c is AsposeContentExtractor);
-
-                    if(contentExtractor != null)
+                    try
                     {
+                        var settings = new FileIndexingSettings();
+
+                        settings.ExtractContents = true;
+                        settings.GenerateThumbnail = false;
+
+                        settings.ContentExtractionTimeout = 500;
                         settings.FilterContentExtractors = extractors => extractors.Where(e => e.Name != "Tika" && e.Name != "POI");
                         settings.ShouldSkipMultipleExtractors = (extractor, results) => (extractor.Name == "Tika" || extractor.Name == "POI") ? false : true;
-                    }
+                        var contentExtractor = this.appContext.Container.ResolveAll<IContentExtractor>().FirstOrDefault(c => c is AsposeContentExtractor);
 
-                    using (var tempFile = new TemporaryFile(value.Name))
-                    {
-                        using (var webClient = new WebClient())
+
+                        using (var tempFile = new TemporaryFile(value.Name))
                         {
-                            Stream file = new MemoryStream(webClient.DownloadData(webUrl));
-                            using (var md5 = MD5.Create())
+                            using (var webClient = new WebClient())
                             {
-                                using (var stream = file)
+                                Stream file = new MemoryStream(webClient.DownloadData(webUrl));
+                                using (var md5 = MD5.Create())
                                 {
-                                    var hashBytes = md5.ComputeHash(stream);
-
-                                    hash = BitConverter.ToString(hashBytes);
-
-                                    using (var fileStream = System.IO.File.Create(tempFile.FilePath))
+                                    using (var stream = file)
                                     {
-                                        file.Seek(0, SeekOrigin.Begin);
-                                        file.CopyTo(fileStream);
+                                        var hashBytes = md5.ComputeHash(stream);
+
+                                        hash = BitConverter.ToString(hashBytes);
+
+                                        using (var fileStream = System.IO.File.Create(tempFile.FilePath))
+                                        {
+                                            file.Seek(0, SeekOrigin.Begin);
+                                            file.CopyTo(fileStream);
+                                        }
                                     }
                                 }
+                                file.Close();
                             }
-                            file.Close();
+
+                            if (value.Name != null)
+                                data.EntityData.DocumentFileName = value.Name;
+
+                            data.EntityData.DocumentSize = tempFile.FileInfo.Length;
+                            data.EntityData.Properties[OneDriveVocabularies.File.Hash] = hash;
+
+                            appContext.Container.GetLogger().Info(() => $"Indexing file from OneDrive. File: {value.Name}");
+
+                            var indexingResults = FileCrawlingUtility.IndexFile(appContext, state, clue, tempFile, settings);
+                            if (indexingResults != null && indexingResults.IsContentExtractionSuccessful)
+                            {
+                                appContext.Container.GetLogger().Info(() => $"Indexed file from OneDrive. File: {value.Name}");
+                            }
+                            else
+                            {
+                                appContext.Container.GetLogger().Error(() => $"Could not index file from OneDrive. File: {value.Name}");
+                            }
+
                         }
-
-                        if (value.Name != null)
-                            data.EntityData.DocumentFileName = value.Name;
-
-                        data.EntityData.DocumentSize = tempFile.FileInfo.Length;
-                        data.EntityData.Properties[OneDriveVocabularies.File.Hash] = hash;
-
-                        var indexingResults = FileCrawlingUtility.IndexFile(appContext, state, clue, tempFile, settings);
-                        if (indexingResults != null && indexingResults.IsContentExtractionSuccessful)
-                        {
-                            appContext.Container.GetLogger().Info(() => $"Indexed file from OneDrive. File: {value.Name}");
-                        }
-                        else
-                        {
-                            appContext.Container.GetLogger().Error(() => $"Could not index file from OneDrive. File: {value.Name}");
-                        }
-
                     }
-                }
-                catch (Exception ex)
-                {
-                    appContext.Container.GetLogger().Error(() => ex.Message, ex);
-                }
+                    catch (Exception ex)
+                    {
+                        appContext.Container.GetLogger().Error(() => ex.Message, ex);
+                    }
+                });
             }
             else
             {
                 data.EntityData.DocumentFileName = value.Name;
                 data.EntityData.DocumentSize = value.Size;
             }
+
         }
     }
 }

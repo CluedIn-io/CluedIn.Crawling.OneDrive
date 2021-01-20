@@ -6,6 +6,9 @@ using Castle.Facilities.TypedFactory;
 using CluedIn.Core;
 using CluedIn.Crawling.OneDrive.Infrastructure.Factories;
 using RestSharp;
+using CluedIn.ContentExtraction.Aspose.Installers;
+using CluedIn.ContentExtraction.Aspose.ContentExtraction.AsposeExtractors;
+using CluedIn.Crawling.ContentExtraction;
 
 namespace CluedIn.Crawling.OneDrive.Infrastructure.Installers
 {
@@ -20,6 +23,8 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure.Installers
 
             if (!container.Kernel.HasComponent(typeof(IRestClient)) && !container.Kernel.HasComponent(typeof(RestClient)))
                 container.Register(Component.For<IRestClient, RestClient>());
+
+            container.Register(Component.For<IContentExtractor>().ImplementedBy(typeof(AsposeContentExtractor)).LifestyleSingleton());
         }
     }
 }

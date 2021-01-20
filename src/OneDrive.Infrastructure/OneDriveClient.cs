@@ -56,7 +56,13 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
         public IEnumerable<User> GetUsers()
         {
             foreach (var user in graphClient.Users.Request().GetAsync().Result)
-                yield return user;
+            {
+                if(user != null)
+                {
+                    log.Info(() => $"Found user {user.DisplayName}");
+                    yield return user;
+                }
+            }
         }
 
         public IEnumerable<Drive> GetDrives(User user)
@@ -72,7 +78,7 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
             }
             if (drives != null)
             {
-                log.Info("Got Drives for User" + user.DisplayName);
+                log.Info("Got Drives for User " + user.DisplayName);
                 foreach (var drive in drives)
                     yield return drive;
             }
@@ -100,9 +106,19 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
             {
                 foreach (var item in page)
                 {
+                    if (item == null)
+                        continue;
+
                     if (item.Folder != null)
+                    {
                         foreach (var folderItem in GetDriveItems(drive, item.Id))
+                        {
+                            log.Info($"Found folder {folderItem.Name} drive id {drive.Id}");
                             yield return folderItem;
+                        }
+                    }
+
+                    log.Info($"Found item {item.Name} id {item.Id}");
                     yield return item;
                 }
                 while (page.NextPageRequest != null)
@@ -116,8 +132,17 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
                         log.Error(() => ex.Message, ex);
                     }
                     if (page != null)
+                    {
                         foreach (var item in page)
+                        {
+                            if (item == null)
+                                continue;
+
+                            log.Info($"Found item {item.Name} id {item.Id}");
                             yield return item;
+                        }
+                    }
+                        
                 }
             }
         }
@@ -149,7 +174,6 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
             {
                 log.Error(() => $"Could not replace file in OneDrive. {ex.Message}", ex);
                 result = graphClient.Users[userId].Drive.Items[item.Id].Content.Request().PutAsync<DriveItem>(otherStream).Result;
-
             }
 
             return result;

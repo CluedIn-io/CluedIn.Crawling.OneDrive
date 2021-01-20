@@ -17,7 +17,6 @@ namespace CluedIn.Crawling.OneDrive.Installers
             // TODO Add further dependencies to the container here ...
 
             // Temporary register Aspose content extractor in container
-            container.Install(new AsposeContentExtractionInstaller());
         }
     }
 }
