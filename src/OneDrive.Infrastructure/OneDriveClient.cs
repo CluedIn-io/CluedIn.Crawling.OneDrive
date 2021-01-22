@@ -118,7 +118,7 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
                         }
                     }
 
-                    log.Info($"Found item {item.Name} id {item.Id}");
+                    log.Info($"Found item {item.Name} id {item.Id}. Created {item.CreatedDateTime}. Modified {item.LastModifiedDateTime}");
                     yield return item;
                 }
                 while (page.NextPageRequest != null)
@@ -138,7 +138,7 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
                             if (item == null)
                                 continue;
 
-                            log.Info($"Found item {item.Name} id {item.Id}");
+                            log.Info($"Found item {item.Name} id {item.Id}. Created {item.CreatedDateTime}. Modified {item.LastModifiedDateTime}");
                             yield return item;
                         }
                     }

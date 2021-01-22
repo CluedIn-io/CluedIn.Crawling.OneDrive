@@ -75,12 +75,12 @@ namespace CluedIn.Crawling.OneDrive.ClueProducers
             data.Properties[vocabulary.ETag] = input.ETag.PrintIfAvailable();
             data.Properties[vocabulary.ParentReference] = input.ParentReference.PrintIfAvailable();
             data.Properties[vocabulary.WebUrl] = input.WebUrl.PrintIfAvailable();
-            data.Properties[vocabulary.CreatedBy] = input.CreatedBy.PrintIfAvailable();
-            data.Properties[vocabulary.CreatedByUser] = input.CreatedByUser.PrintIfAvailable();
+            data.Properties[vocabulary.CreatedBy] = input.CreatedBy?.User?.DisplayName?.PrintIfAvailable();
+            data.Properties[vocabulary.CreatedByUser] = input.CreatedByUser?.DisplayName?.PrintIfAvailable();
             data.Properties[vocabulary.CreatedDateTime] = input.CreatedDateTime.PrintIfAvailable();
             data.Properties[vocabulary.Description] = input.Description.PrintIfAvailable();
-            data.Properties[vocabulary.LastModifiedBy] = input.LastModifiedBy.PrintIfAvailable();
-            data.Properties[vocabulary.LastModifiedByUser] = input.LastModifiedByUser.PrintIfAvailable();
+            data.Properties[vocabulary.LastModifiedBy] = input.LastModifiedBy?.User?.DisplayName?.PrintIfAvailable();
+            data.Properties[vocabulary.LastModifiedByUser] = input.LastModifiedByUser?.DisplayName?.PrintIfAvailable();
             data.Properties[vocabulary.LastModifiedDateTime] = input.LastModifiedDateTime.PrintIfAvailable();
         }
     }

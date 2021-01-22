@@ -23,8 +23,6 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure.Installers
 
             if (!container.Kernel.HasComponent(typeof(IRestClient)) && !container.Kernel.HasComponent(typeof(RestClient)))
                 container.Register(Component.For<IRestClient, RestClient>());
-
-            container.Register(Component.For<IContentExtractor>().ImplementedBy(typeof(AsposeContentExtractor)).LifestyleSingleton());
         }
     }
 }
