@@ -55,32 +55,84 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
 
         public IEnumerable<User> GetUsers()
         {
-            foreach (var user in graphClient.Users.Request().GetAsync().Result)
+            var page = graphClient.Users.Request().GetAsync().Result;
+
+            if (page != null)
             {
-                if(user != null)
+                foreach (var user in page)
                 {
-                    log.Info(() => $"Found user {user.DisplayName}");
-                    yield return user;
+                    if (user != null)
+                    {
+                        log.Info(() => $"Found user {user.DisplayName}");
+                        yield return user;
+                    }
+                }
+                while (page.NextPageRequest != null)
+                {
+                    try
+                    {
+                        page = page.NextPageRequest.GetAsync().Result;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error(() => ex.Message, ex);
+                    }
+                    if (page != null)
+                    {
+                        foreach (var user in page)
+                        {
+                            if (user == null)
+                                continue;
+
+                            log.Info(() => $"Found user {user.DisplayName}");
+                            yield return user;
+                        }
+                    }
                 }
             }
         }
 
         public IEnumerable<Drive> GetDrives(User user)
         {
-            IUserDrivesCollectionPage drives = null;
+            IUserDrivesCollectionPage page = null;
             try
             {
-                drives = graphClient.Users[user.Id].Drives.Request().GetAsync().Result;
+                page = graphClient.Users[user.Id].Drives.Request().GetAsync().Result;
             }
             catch
             {
                 log.Warn("Could not get Drives for User " + user.DisplayName);
             }
-            if (drives != null)
+            if (page != null)
             {
                 log.Info("Got Drives for User " + user.DisplayName);
-                foreach (var drive in drives)
+                foreach (var drive in page)
+                {
+                    log.Info(() => $"Found drive {drive.Name}");
                     yield return drive;
+                }
+                while (page.NextPageRequest != null)
+                {
+                    try
+                    {
+                        page = page.NextPageRequest.GetAsync().Result;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error(() => ex.Message, ex);
+                    }
+                    if (page != null)
+                    {
+                        foreach (var drive in page)
+                        {
+                            if (drive == null)
+                                continue;
+
+                            log.Info(() => $"Found user {drive.Name}");
+                            yield return drive;
+                        }
+                    }
+                }
             }
         }
 
