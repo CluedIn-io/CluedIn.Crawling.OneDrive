@@ -16,6 +16,7 @@ namespace CluedIn.Crawling.OneDrive.Core
             public const string ClientSecret = nameof(ClientSecret);
             public const string UseProxy = nameof(UseProxy);
             public const string FullCrawl = nameof(FullCrawl);
+            public const string SkipUntilUser = nameof(SkipUntilUser);
         }
 
         public const string CrawlerDescription = "Microsoft OneDrive is a file hosting service and synchronization service operated by Microsoft as part of its web version of Office.";

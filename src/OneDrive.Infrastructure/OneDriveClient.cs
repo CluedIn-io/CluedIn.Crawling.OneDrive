@@ -59,6 +59,9 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
 
             if (page != null)
             {
+                var pageCount = 1;
+                log.Info(() => $"Found Users page {pageCount}");
+
                 foreach (var user in page)
                 {
                     if (user != null)
@@ -79,6 +82,8 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
                     }
                     if (page != null)
                     {
+                        pageCount++;
+                        log.Info(() => $"Found Users page {pageCount}");
                         foreach (var user in page)
                         {
                             if (user == null)

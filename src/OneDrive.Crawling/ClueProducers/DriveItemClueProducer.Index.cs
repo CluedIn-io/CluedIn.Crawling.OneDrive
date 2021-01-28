@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
 using CluedIn.ContentExtraction.Aspose.ContentExtraction.AsposeExtractors;
 using CluedIn.Core;
+using CluedIn.Core.Configuration;
 using CluedIn.Core.Data;
 using CluedIn.Core.FileTypes;
 using CluedIn.Core.IO;
@@ -71,8 +74,20 @@ namespace CluedIn.Crawling.OneDrive.ClueProducers
 
                         appContext.Container.GetLogger().Info(() => $"Indexing file from OneDrive. File: {value.Name}");
 
-                        var indexingResults = FileCrawlingUtility.IndexFile(appContext, state, clue, tempFile, settings);
-                        if (indexingResults != null && indexingResults.IsContentExtractionSuccessful)
+                        FileIndexingResults indexingResults = null;
+
+                        Task[] tasks = new Task[2];
+                        tasks[0] = Task.Run(() => { Thread.Sleep(ConfigurationManager.AppSettings.GetValue<int>("Saxo.Crawling.IndexingTimeout", 300000)); });
+
+
+                        tasks[1] = Task.Run(() =>
+                        {
+                            indexingResults = FileCrawlingUtility.IndexFile(appContext, state, clue, tempFile, settings);
+                        });
+
+                        var index = Task.WaitAny(tasks);
+
+                        if (index == 1 && indexingResults != null && indexingResults.IsContentExtractionSuccessful)
                         {
                             appContext.Container.GetLogger().Info(() => $"Indexed file from OneDrive. File: {value.Name}");
                         }
