@@ -51,6 +51,9 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
                      new AuthenticationHeaderValue("Bearer", authResult.AccessToken);
               })
               );
+
+            log.Info($"LastCrawlFinishTime {onedriveCrawlJobData.LastCrawlFinishTime}");
+
         }
 
         public IEnumerable<User> GetUsers()
@@ -206,11 +209,7 @@ namespace CluedIn.Crawling.OneDrive.Infrastructure
 
         public AccountInformation GetAccountInformation()
         {
-            var response = ActionExtensions.ExecuteWithRetry(() => { return graphClient.Users.Request().GetAsync().Result; });
-            if (response == null)
-                return new AccountInformation(string.Empty, string.Empty);
-            else
-                return new AccountInformation(onedriveCrawlJobData.ClientID, onedriveCrawlJobData.ClientID);
+            return new AccountInformation(string.Empty, string.Empty);
         }
 
         public DriveItem ReplaceFile(string userId, Drive drive, DriveItem item, Stream stream)

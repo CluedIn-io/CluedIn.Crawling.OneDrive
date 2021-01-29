@@ -29,7 +29,11 @@ namespace CluedIn.Crawling.OneDrive
             if (!onedrivecrawlJobData.FullCrawl)
             {
                 if (onedrivecrawlJobData.LastCrawlFinishTime != default(DateTimeOffset))
-                    onedrivecrawlJobData.LastCrawlFinishTime = onedrivecrawlJobData.LastCrawlFinishTime.AddHours(-3);
+                    onedrivecrawlJobData.LastCrawlFinishTime = onedrivecrawlJobData.LastCrawlFinishTime.AddDays(-1);
+                else
+                {
+                    onedrivecrawlJobData.LastCrawlFinishTime = DateTimeOffset.Now.AddDays(-8);
+                }
             }
 
             foreach (var user in client.GetUsers().SkipWhile(u => {
